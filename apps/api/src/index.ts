@@ -8,6 +8,8 @@ import { loadEnv } from './lib/env.js'
 import { googleOauth } from './oauth/google.js'
 import { ouraOauth } from './oauth/oura.js'
 import { stravaOauth } from './oauth/strava.js'
+import { foodLogRoute } from './routes/food-log.js'
+import { foodsRoute } from './routes/foods.js'
 import { health } from './routes/health.js'
 import { refreshRoute } from './routes/refresh.js'
 import { todayRoute } from './routes/today.js'
@@ -21,6 +23,8 @@ app.use('*', logger())
 app.route('/api/health', health)
 app.route('/api/refresh', refreshRoute(env))
 app.route('/api/today', todayRoute(env))
+app.route('/api/foods', foodsRoute(env))
+app.route('/api/food-log', foodLogRoute(env))
 app.route('/api/oauth/oura', ouraOauth(env, (k) => process.env[k]))
 app.route('/api/oauth/strava', stravaOauth(env, (k) => process.env[k]))
 app.route('/api/oauth/google', googleOauth(env, (k) => process.env[k]))

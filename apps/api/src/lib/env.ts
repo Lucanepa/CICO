@@ -23,6 +23,8 @@ const envSchema = z.object({
   GOOGLE_CLIENT_SECRET: z.string().optional(),
   GOOGLE_REDIRECT_URI: z.string().optional(),
   GOOGLE_DRIVE_FOLDER_ID: z.string().optional(),
+
+  USDA_API_KEY: z.string().optional(),
 })
 
 export type Env = z.infer<typeof envSchema>
