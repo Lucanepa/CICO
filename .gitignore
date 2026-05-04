@@ -1,0 +1,37 @@
+# dependencies
+node_modules
+.pnpm-store
+
+# build
+dist
+build
+*.tsbuildinfo
+apps/api/public
+
+# env
+.env
+.env.local
+.env.*.local
+
+# data
+infra/pgdata
+pgdata
+
+# logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# editor
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+.idea
+
+# test
+coverage
+playwright-report
+test-results
+
+# os
+Thumbs.db
