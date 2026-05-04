@@ -8,6 +8,8 @@ import { getOrCreateDefaultUser } from '../lib/user.js'
 import { schema } from '@cico/db'
 import { offByBarcode } from '../foods/off.js'
 import { offSearch } from '../foods/off.js'
+import { extractNutritionFromImage, ocrToCustomFood } from '../foods/ocr.js'
+import { importRecipeFromUrl } from '../foods/recipe-url.js'
 import { findByBarcode, searchFoods, upsertFoods } from '../foods/store.js'
 import { usdaSearch } from '../foods/usda.js'
 
@@ -97,6 +99,86 @@ export function foodsRoute(env: Env) {
       .delete(schema.customFoods)
       .where(and(eq(schema.customFoods.id, id), eq(schema.customFoods.userId, userId)))
     return c.json({ ok: true })
+  })
+
+  const ocrSchema = z.object({
+    imageBase64: z.string().min(64),
+    mimeType: z.enum(['image/jpeg', 'image/png', 'image/webp', 'image/gif']),
+    persist: z.boolean().optional(),
+  })
+
+  app.post('/ocr', zValidator('json', ocrSchema), async (c) => {
+    if (!env.ANTHROPIC_API_KEY) {
+      return c.json({ error: 'ocr_not_configured' }, 503)
+    }
+    const body = c.req.valid('json')
+    const database = db(env.DATABASE_URL)
+    const userId = await getOrCreateDefaultUser(database, env.DEFAULT_USER_EMAIL)
+
+    let result
+    try {
+      result = await extractNutritionFromImage({
+        apiKey: env.ANTHROPIC_API_KEY,
+        imageBase64: body.imageBase64,
+        mimeType: body.mimeType,
+      })
+    } catch (err) {
+      return c.json({ error: 'ocr_failed', message: (err as Error).message }, 502)
+    }
+
+    if (body.persist) {
+      const cf = ocrToCustomFood(result)
+      const inserted = await database
+        .insert(schema.customFoods)
+        .values({ userId, ...cf })
+        .returning()
+      return c.json({ ok: true, ocr: result, food: inserted[0], persisted: true }, 201)
+    }
+
+    return c.json({ ok: true, ocr: result, persisted: false })
+  })
+
+  const urlSchema = z.object({
+    url: z.string().url(),
+    persist: z.boolean().optional(),
+  })
+
+  app.post('/from-url', zValidator('json', urlSchema), async (c) => {
+    const body = c.req.valid('json')
+    let recipe
+    try {
+      recipe = await importRecipeFromUrl(body.url)
+    } catch (err) {
+      return c.json({ error: 'recipe_fetch_failed', message: (err as Error).message }, 502)
+    }
+    if (!recipe) return c.json({ error: 'no_jsonld_recipe_found' }, 404)
+
+    if (body.persist) {
+      if (recipe.kcal100g == null) {
+        return c.json(
+          { error: 'recipe_missing_serving_size', recipe },
+          422,
+        )
+      }
+      const database = db(env.DATABASE_URL)
+      const userId = await getOrCreateDefaultUser(database, env.DEFAULT_USER_EMAIL)
+      const inserted = await database
+        .insert(schema.customFoods)
+        .values({
+          userId,
+          name: recipe.name,
+          kcal100g: recipe.kcal100g,
+          p100g: recipe.p100g,
+          c100g: recipe.c100g,
+          f100g: recipe.f100g,
+          fiber100g: recipe.fiber100g,
+          defaultServingG: recipe.defaultServingG,
+        })
+        .returning()
+      return c.json({ ok: true, recipe, food: inserted[0], persisted: true }, 201)
+    }
+
+    return c.json({ ok: true, recipe, persisted: false })
   })
 
   return app

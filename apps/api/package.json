@@ -12,6 +12,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.93.0",
     "@cico/db": "workspace:*",
     "@cico/shared": "workspace:*",
     "@hono/node-server": "^1.13.0",

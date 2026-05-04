@@ -25,6 +25,7 @@ const envSchema = z.object({
   GOOGLE_DRIVE_FOLDER_ID: z.string().optional(),
 
   USDA_API_KEY: z.string().optional(),
+  ANTHROPIC_API_KEY: z.string().optional(),
 })
 
 export type Env = z.infer<typeof envSchema>
