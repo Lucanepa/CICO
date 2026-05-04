@@ -9,6 +9,7 @@ import { syncOura } from '../sync/oura/index.js'
 import { StravaNotConnectedError } from '../sync/strava/client.js'
 import { syncStrava } from '../sync/strava/index.js'
 import { GoogleNotConnectedError, syncHealthSync } from '../sync/healthsync/index.js'
+import { dedupWorkoutsForWindow } from '../dedup/index.js'
 
 export function refreshRoute(env: Env) {
   const app = new Hono()
@@ -83,8 +84,29 @@ export function refreshRoute(env: Env) {
       sources.huawei = { status: 'not_configured' }
     }
 
+    const today = new Date()
+    const startDate = isoDate(daysAgo(today, 14))
+    const endDate = isoDate(today)
+    try {
+      const dedup = await dedupWorkoutsForWindow(database, userId, startDate, endDate)
+      sources.dedup = dedup
+    } catch (err) {
+      Sentry.captureException(err)
+      sources.dedup = { status: 'error', message: (err as Error).message }
+    }
+
     return c.json({ ok: true, userId, sources })
   })
 
   return app
+}
+
+function isoDate(d: Date): string {
+  return d.toISOString().slice(0, 10)
+}
+
+function daysAgo(from: Date, n: number): Date {
+  const d = new Date(from)
+  d.setUTCDate(d.getUTCDate() - n)
+  return d
 }
