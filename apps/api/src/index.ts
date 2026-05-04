@@ -6,8 +6,10 @@ import { logger } from 'hono/logger'
 import { startCron } from './cron/prewarm.js'
 import { loadEnv } from './lib/env.js'
 import { ouraOauth } from './oauth/oura.js'
+import { stravaOauth } from './oauth/strava.js'
 import { health } from './routes/health.js'
 import { refreshRoute } from './routes/refresh.js'
+import { stravaWebhook } from './webhooks/strava.js'
 
 const env = loadEnv()
 const app = new Hono()
@@ -17,6 +19,8 @@ app.use('*', logger())
 app.route('/api/health', health)
 app.route('/api/refresh', refreshRoute(env))
 app.route('/api/oauth/oura', ouraOauth(env, (k) => process.env[k]))
+app.route('/api/oauth/strava', stravaOauth(env, (k) => process.env[k]))
+app.route('/api/webhooks/strava', stravaWebhook(env))
 
 app.onError((err, c) => {
   Sentry.captureException(err)

@@ -13,6 +13,11 @@ const envSchema = z.object({
   OURA_CLIENT_ID: z.string().optional(),
   OURA_CLIENT_SECRET: z.string().optional(),
   OURA_REDIRECT_URI: z.string().optional(),
+
+  STRAVA_CLIENT_ID: z.string().optional(),
+  STRAVA_CLIENT_SECRET: z.string().optional(),
+  STRAVA_REDIRECT_URI: z.string().optional(),
+  STRAVA_WEBHOOK_VERIFY_TOKEN: z.string().optional(),
 })
 
 export type Env = z.infer<typeof envSchema>
