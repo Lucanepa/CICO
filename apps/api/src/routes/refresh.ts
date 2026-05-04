@@ -8,6 +8,7 @@ import { OuraNotConnectedError } from '../sync/oura/client.js'
 import { syncOura } from '../sync/oura/index.js'
 import { StravaNotConnectedError } from '../sync/strava/client.js'
 import { syncStrava } from '../sync/strava/index.js'
+import { GoogleNotConnectedError, syncHealthSync } from '../sync/healthsync/index.js'
 
 export function refreshRoute(env: Env) {
   const app = new Hono()
@@ -56,6 +57,30 @@ export function refreshRoute(env: Env) {
       }
     } else {
       sources.strava = { status: 'not_configured' }
+    }
+
+    if (
+      env.GOOGLE_CLIENT_ID &&
+      env.GOOGLE_CLIENT_SECRET &&
+      env.GOOGLE_DRIVE_FOLDER_ID
+    ) {
+      try {
+        sources.huawei = await syncHealthSync(
+          database,
+          { clientId: env.GOOGLE_CLIENT_ID, clientSecret: env.GOOGLE_CLIENT_SECRET },
+          userId,
+          env.GOOGLE_DRIVE_FOLDER_ID,
+        )
+      } catch (err) {
+        if (err instanceof GoogleNotConnectedError) {
+          sources.huawei = { status: 'not_connected' }
+        } else {
+          Sentry.captureException(err)
+          sources.huawei = { status: 'error', message: (err as Error).message }
+        }
+      }
+    } else {
+      sources.huawei = { status: 'not_configured' }
     }
 
     return c.json({ ok: true, userId, sources })

@@ -8,6 +8,7 @@ import { OuraNotConnectedError } from '../sync/oura/client.js'
 import { syncOura } from '../sync/oura/index.js'
 import { StravaNotConnectedError } from '../sync/strava/client.js'
 import { syncStrava } from '../sync/strava/index.js'
+import { GoogleNotConnectedError, syncHealthSync } from '../sync/healthsync/index.js'
 
 export function startCron(env: Env) {
   const schedule = env.CRON_PREWARM_SCHEDULE
@@ -47,6 +48,24 @@ export function startCron(env: Env) {
             console.log('[cron] strava', result)
           } catch (err) {
             if (!(err instanceof StravaNotConnectedError)) throw err
+          }
+        }
+
+        if (
+          env.GOOGLE_CLIENT_ID &&
+          env.GOOGLE_CLIENT_SECRET &&
+          env.GOOGLE_DRIVE_FOLDER_ID
+        ) {
+          try {
+            const result = await syncHealthSync(
+              database,
+              { clientId: env.GOOGLE_CLIENT_ID, clientSecret: env.GOOGLE_CLIENT_SECRET },
+              userId,
+              env.GOOGLE_DRIVE_FOLDER_ID,
+            )
+            console.log('[cron] huawei', result)
+          } catch (err) {
+            if (!(err instanceof GoogleNotConnectedError)) throw err
           }
         }
       } catch (err) {

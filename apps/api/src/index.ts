@@ -5,6 +5,7 @@ import { Hono } from 'hono'
 import { logger } from 'hono/logger'
 import { startCron } from './cron/prewarm.js'
 import { loadEnv } from './lib/env.js'
+import { googleOauth } from './oauth/google.js'
 import { ouraOauth } from './oauth/oura.js'
 import { stravaOauth } from './oauth/strava.js'
 import { health } from './routes/health.js'
@@ -20,6 +21,7 @@ app.route('/api/health', health)
 app.route('/api/refresh', refreshRoute(env))
 app.route('/api/oauth/oura', ouraOauth(env, (k) => process.env[k]))
 app.route('/api/oauth/strava', stravaOauth(env, (k) => process.env[k]))
+app.route('/api/oauth/google', googleOauth(env, (k) => process.env[k]))
 app.route('/api/webhooks/strava', stravaWebhook(env))
 
 app.onError((err, c) => {

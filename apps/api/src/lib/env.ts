@@ -18,6 +18,11 @@ const envSchema = z.object({
   STRAVA_CLIENT_SECRET: z.string().optional(),
   STRAVA_REDIRECT_URI: z.string().optional(),
   STRAVA_WEBHOOK_VERIFY_TOKEN: z.string().optional(),
+
+  GOOGLE_CLIENT_ID: z.string().optional(),
+  GOOGLE_CLIENT_SECRET: z.string().optional(),
+  GOOGLE_REDIRECT_URI: z.string().optional(),
+  GOOGLE_DRIVE_FOLDER_ID: z.string().optional(),
 })
 
 export type Env = z.infer<typeof envSchema>
