@@ -13,6 +13,7 @@ import { foodsRoute } from './routes/foods.js'
 import { health } from './routes/health.js'
 import { refreshRoute } from './routes/refresh.js'
 import { todayRoute } from './routes/today.js'
+import { workoutsRoute } from './routes/workouts.js'
 import { stravaWebhook } from './webhooks/strava.js'
 
 const env = loadEnv()
@@ -25,6 +26,7 @@ app.route('/api/refresh', refreshRoute(env))
 app.route('/api/today', todayRoute(env))
 app.route('/api/foods', foodsRoute(env))
 app.route('/api/food-log', foodLogRoute(env))
+app.route('/api/workouts', workoutsRoute(env))
 app.route('/api/oauth/oura', ouraOauth(env, (k) => process.env[k]))
 app.route('/api/oauth/strava', stravaOauth(env, (k) => process.env[k]))
 app.route('/api/oauth/google', googleOauth(env, (k) => process.env[k]))

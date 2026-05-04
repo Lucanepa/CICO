@@ -11,6 +11,32 @@ export type CicoBreakdown = {
   flags: string[]
 }
 
+export type ZoneMinutes = {
+  z0: number
+  z1: number
+  z2: number
+  z3: number
+  z4: number
+  z5: number
+}
+
+export type Workout = {
+  id: string
+  date: string
+  startTime: string
+  endTime: string
+  source: string
+  sourceId: string | null
+  type: string
+  durationMin: number
+  calories: number | null
+  avgHr: number | null
+  maxHr: number | null
+  zoneMinutesJsonb: ZoneMinutes | null
+  isPrimary: boolean
+  duplicateOf: string | null
+}
+
 export type FoodLogEntry = {
   id: string
   date: string
@@ -51,6 +77,9 @@ export const api = {
   foodLog: (date: string) =>
     get<{ ok: boolean; entries: FoodLogEntry[] }>(`/api/food-log?date=${date}`),
   deleteFoodLog: (id: string) => send<{ ok: boolean }>(`/api/food-log/${id}`, 'DELETE'),
+  workouts: (date: string) =>
+    get<{ ok: boolean; workouts: Workout[] }>(`/api/workouts?date=${date}`),
+  pinPrimary: (id: string) => send<{ ok: boolean }>(`/api/workouts/pin-primary`, 'POST', { id }),
 }
 
 export function localIsoDate(): string {
