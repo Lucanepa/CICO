@@ -8,6 +8,11 @@ const envSchema = z.object({
   TZ: z.string().default('Europe/Zurich'),
   SENTRY_DSN_API: z.string().optional(),
   CRON_PREWARM_SCHEDULE: z.string().default('0 3 * * *'),
+  DEFAULT_USER_EMAIL: z.string().email().default('me@cico.local'),
+
+  OURA_CLIENT_ID: z.string().optional(),
+  OURA_CLIENT_SECRET: z.string().optional(),
+  OURA_REDIRECT_URI: z.string().optional(),
 })
 
 export type Env = z.infer<typeof envSchema>
