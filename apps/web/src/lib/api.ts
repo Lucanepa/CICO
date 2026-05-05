@@ -79,6 +79,14 @@ export const api = {
   deleteFoodLog: (id: string) => send<{ ok: boolean }>(`/api/food-log/${id}`, 'DELETE'),
   workouts: (date: string) =>
     get<{ ok: boolean; workouts: Workout[] }>(`/api/workouts?date=${date}`),
+  workout: (id: string) =>
+    get<{
+      ok: boolean
+      workout: Workout
+      samples: Array<{ timestamp: string; bpm: number; source: string }>
+      duplicates: Workout[]
+      maxHr: number
+    }>(`/api/workouts/${id}`),
   pinPrimary: (id: string) => send<{ ok: boolean }>(`/api/workouts/pin-primary`, 'POST', { id }),
 }
 

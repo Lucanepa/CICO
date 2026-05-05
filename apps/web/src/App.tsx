@@ -2,6 +2,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { BottomNav } from './components/BottomNav'
 import { Activity } from './views/Activity'
 import { Today } from './views/Today'
+import { WorkoutDetail } from './views/WorkoutDetail'
 
 export function App() {
   return (
@@ -9,6 +10,7 @@ export function App() {
       <Routes>
         <Route path="/" element={<Today />} />
         <Route path="/activity" element={<Activity />} />
+        <Route path="/workout/:id" element={<WorkoutDetail />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <BottomNav />
