@@ -1,5 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { ChevronLeft } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
 import { HrCurve } from '../components/HrCurve'
 import { SourceBadge } from '../components/SourceBadge'
 import { ZoneBar } from '../components/ZoneBar'
@@ -37,108 +40,95 @@ export function WorkoutDetail() {
     void load()
   }, [load])
 
-  if (error) return <div style={{ padding: 24, color: 'var(--danger)' }}>error: {error}</div>
-  if (!data) return <div style={{ padding: 24 }}>loading…</div>
+  if (error)
+    return (
+      <main className="mx-auto max-w-md px-5 pt-10 text-sm text-destructive">Error: {error}</main>
+    )
+  if (!data)
+    return (
+      <main className="mx-auto max-w-md px-5 pt-10 text-sm text-muted-foreground">Loading…</main>
+    )
 
   const { workout: w, samples, duplicates, maxHr } = data
 
   return (
-    <main style={{ padding: '24px 20px 96px', maxWidth: 480, margin: '0 auto' }}>
-      <button onClick={() => navigate(-1)} style={{ marginBottom: 16, padding: '6px 10px', fontSize: 12 }}>
-        ← back
-      </button>
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+    <main className="mx-auto max-w-md space-y-4 px-5 pb-28 pt-6">
+      <Button
+        variant="ghost"
+        size="sm"
+        className="-ml-2 gap-1 text-muted-foreground"
+        onClick={() => navigate(-1)}
+      >
+        <ChevronLeft className="h-4 w-4" />
+        Back
+      </Button>
+
+      <header className="flex items-start justify-between gap-3">
         <div>
-          <h1 style={{ margin: 0, fontSize: 24 }}>{w.type}</h1>
-          <div style={{ fontSize: 12, color: 'var(--muted-foreground)' }}>
+          <h1 className="text-2xl font-semibold tracking-tight">{w.type}</h1>
+          <p className="mt-0.5 text-xs text-muted-foreground">
             {timeRange(w.startTime, w.endTime)} · {Math.round(w.durationMin)} min
-          </div>
+          </p>
         </div>
         <SourceBadge source={w.source} />
       </header>
 
-      <section
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(3, 1fr)',
-          gap: 8,
-          marginTop: 16,
-        }}
-      >
-        <Stat label="kcal" value={w.calories ?? '—'} />
-        <Stat label="avg HR" value={w.avgHr ?? '—'} suffix="bpm" />
-        <Stat label="max HR" value={w.maxHr ?? '—'} suffix="bpm" />
+      <section className="grid grid-cols-3 gap-2">
+        <Stat label="Kcal" value={w.calories ?? '—'} />
+        <Stat label="Avg HR" value={w.avgHr ?? '—'} suffix="bpm" />
+        <Stat label="Max HR" value={w.maxHr ?? '—'} suffix="bpm" />
       </section>
 
-      <h2 style={sectionLabel}>heart rate</h2>
-      <HrCurve
-        samples={samples}
-        maxHr={maxHr}
-        startTime={w.startTime}
-        endTime={w.endTime}
-      />
+      <h2 className="mt-2 text-xs uppercase tracking-wide text-muted-foreground">Heart rate</h2>
+      <Card className="p-3">
+        <HrCurve samples={samples} maxHr={maxHr} startTime={w.startTime} endTime={w.endTime} />
+      </Card>
 
       {w.zoneMinutesJsonb && (
         <>
-          <h2 style={sectionLabel}>time in zone</h2>
-          <div style={cardStyle}>
+          <h2 className="text-xs uppercase tracking-wide text-muted-foreground">Time in zone</h2>
+          <Card className="p-4">
             <ZoneBar zones={w.zoneMinutesJsonb} height={20} />
-          </div>
+          </Card>
         </>
       )}
 
       {duplicates.length > 0 && (
         <>
-          <h2 style={sectionLabel}>also recorded by</h2>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <h2 className="text-xs uppercase tracking-wide text-muted-foreground">
+            Also recorded by
+          </h2>
+          <div className="flex flex-col gap-2">
             {duplicates.map((d) => (
-              <div key={d.id} style={cardStyle}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div style={{ fontSize: 13 }}>{d.type}</div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <Card key={d.id} className="p-3">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="text-sm">{d.type}</div>
+                  <div className="flex items-center gap-2">
                     {d.calories != null && (
-                      <span style={{ fontSize: 12, color: 'var(--muted-foreground)' }}>
+                      <span className="text-xs text-muted-foreground">
                         {fmt.format(d.calories)} kcal
                       </span>
                     )}
                     <SourceBadge source={d.source} />
-                    <button
+                    <Button
+                      size="sm"
+                      variant="outline"
                       onClick={async () => {
                         await api.pinPrimary(d.id)
                         await load()
                       }}
-                      style={{ padding: '4px 8px', fontSize: 11 }}
                     >
-                      use this
-                    </button>
+                      Use this
+                    </Button>
                   </div>
                 </div>
-              </div>
+              </Card>
             ))}
           </div>
         </>
       )}
     </main>
   )
-}
-
-const cardStyle: React.CSSProperties = {
-  background: 'var(--surface)',
-  border: '1px solid var(--border)',
-  borderRadius: 12,
-  padding: 12,
-  display: 'flex',
-  flexDirection: 'column',
-  gap: 8,
-}
-
-const sectionLabel: React.CSSProperties = {
-  fontSize: 13,
-  color: 'var(--muted-foreground)',
-  textTransform: 'uppercase',
-  letterSpacing: 0.5,
-  marginTop: 24,
-  marginBottom: 8,
 }
 
 function Stat({
@@ -151,22 +141,13 @@ function Stat({
   suffix?: string
 }) {
   return (
-    <div style={cardStyle}>
-      <span
-        style={{
-          fontSize: 11,
-          color: 'var(--muted-foreground)',
-          textTransform: 'uppercase',
-          letterSpacing: 0.5,
-        }}
-      >
-        {label}
-      </span>
-      <span style={{ fontSize: 18, fontWeight: 600 }}>
+    <Card className="p-3">
+      <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</div>
+      <div className="mt-0.5 text-lg font-semibold leading-none">
         {typeof value === 'number' ? fmt.format(value) : value}{' '}
-        {suffix && <span style={{ fontSize: 10, color: 'var(--muted-foreground)' }}>{suffix}</span>}
-      </span>
-    </div>
+        {suffix && <span className="text-[10px] font-normal text-muted-foreground">{suffix}</span>}
+      </div>
+    </Card>
   )
 }
 

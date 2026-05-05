@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
+import { cn } from '@/lib/utils'
 import { SourceBadge } from '../components/SourceBadge'
 import { ZoneBar } from '../components/ZoneBar'
 import { api, localIsoDate, type Workout, type ZoneMinutes } from '../lib/api'
@@ -23,76 +26,85 @@ export function Activity() {
     })()
   }, [date])
 
-  if (error) return <div style={{ padding: 24, color: 'var(--danger)' }}>error: {error}</div>
-  if (!workouts) return <div style={{ padding: 24 }}>loading…</div>
+  if (error)
+    return (
+      <main className="mx-auto max-w-md px-5 pt-10 text-sm text-destructive">Error: {error}</main>
+    )
+  if (!workouts)
+    return (
+      <main className="mx-auto max-w-md px-5 pt-10 text-sm text-muted-foreground">Loading…</main>
+    )
 
   const dayZones = sumZones(workouts.filter((w) => w.isPrimary).map((w) => w.zoneMinutesJsonb))
-
   const primary = workouts.filter((w) => w.isPrimary)
   const duplicates = workouts.filter((w) => !w.isPrimary)
 
   return (
-    <main style={{ padding: '24px 20px 96px', maxWidth: 480, margin: '0 auto' }}>
-      <h1 style={{ margin: 0, fontSize: 28 }}>Activity</h1>
-      <div style={{ fontSize: 12, color: 'var(--muted-foreground)', marginBottom: 24 }}>
-        {prettyDate(date)}
-      </div>
+    <main className="mx-auto max-w-md space-y-4 px-5 pb-28 pt-6">
+      <header>
+        <h1 className="text-3xl font-semibold tracking-tight">Activity</h1>
+        <p className="mt-0.5 text-xs uppercase tracking-wide text-muted-foreground">
+          {prettyDate(date)}
+        </p>
+      </header>
 
-      <section style={cardStyle}>
-        <div style={{ fontSize: 12, color: 'var(--muted-foreground)', textTransform: 'uppercase' }}>
-          time in zone (primary workouts)
-        </div>
+      <Card className="flex flex-col gap-3 p-4">
+        <span className="text-xs uppercase tracking-wide text-muted-foreground">
+          Time in zone (primary workouts)
+        </span>
         {dayZones ? (
           <ZoneBar zones={dayZones} height={20} />
         ) : (
-          <div style={{ color: 'var(--muted-foreground)', fontSize: 13 }}>no HR data today</div>
+          <p className="text-sm text-muted-foreground">No HR data today.</p>
         )}
-      </section>
+      </Card>
 
-      <h2 style={{ fontSize: 14, color: 'var(--muted-foreground)', textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 24 }}>
-        workouts
-      </h2>
+      <h2 className="text-xs uppercase tracking-wide text-muted-foreground">Workouts</h2>
       {primary.length === 0 && (
-        <div style={{ color: 'var(--muted-foreground)', fontSize: 13 }}>no workouts logged today</div>
+        <p className="text-sm text-muted-foreground">No workouts logged today.</p>
       )}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <div className="flex flex-col gap-2.5">
         {primary.map((w) => (
-          <div
+          <Card
             key={w.id}
             onClick={() => navigate(`/workout/${w.id}`)}
-            style={{ ...cardStyle, cursor: 'pointer' }}
+            className="flex cursor-pointer flex-col gap-2.5 p-4 transition-colors hover:bg-muted/40"
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <span style={{ fontSize: 16, fontWeight: 600 }}>{w.type}</span>
-                <span style={{ fontSize: 12, color: 'var(--muted-foreground)' }}>
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex flex-col">
+                <span className="text-base font-semibold">{w.type}</span>
+                <span className="text-xs text-muted-foreground">
                   {timeRange(w.startTime, w.endTime)} · {Math.round(w.durationMin)} min
                 </span>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div className="flex items-center gap-2">
                 {w.calories != null && (
-                  <span style={{ fontSize: 14, fontWeight: 600 }}>{fmt.format(w.calories)} kcal</span>
+                  <span className="text-sm font-semibold">{fmt.format(w.calories)} kcal</span>
                 )}
                 <SourceBadge source={w.source} />
               </div>
             </div>
             {w.zoneMinutesJsonb && <ZoneBar zones={w.zoneMinutesJsonb} />}
-          </div>
+          </Card>
         ))}
       </div>
 
       {duplicates.length > 0 && (
-        <details style={{ marginTop: 16 }}>
-          <summary style={{ color: 'var(--muted-foreground)', fontSize: 13, cursor: 'pointer' }}>
+        <details className="mt-4">
+          <summary className="cursor-pointer text-sm text-muted-foreground hover:text-foreground">
             {duplicates.length} duplicate{duplicates.length === 1 ? '' : 's'}
           </summary>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
+          <div className="mt-2 flex flex-col gap-2">
             {duplicates.map((w) => (
-              <DuplicateRow key={w.id} w={w} onPin={async () => {
-                await api.pinPrimary(w.id)
-                const res = await api.workouts(date)
-                setWorkouts(res.workouts)
-              }} />
+              <DuplicateRow
+                key={w.id}
+                w={w}
+                onPin={async () => {
+                  await api.pinPrimary(w.id)
+                  const res = await api.workouts(date)
+                  setWorkouts(res.workouts)
+                }}
+              />
             ))}
           </div>
         </details>
@@ -104,21 +116,17 @@ export function Activity() {
 function DuplicateRow({ w, onPin }: { w: Workout; onPin: () => Promise<void> }) {
   const [busy, setBusy] = useState(false)
   return (
-    <div
-      style={{
-        ...cardStyle,
-        background: 'var(--surface-2)',
-        opacity: 0.7,
-      }}
-    >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
-        <div style={{ fontSize: 13 }}>{w.type}</div>
-        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+    <Card className={cn('p-3 opacity-70 bg-secondary/40')}>
+      <div className="flex items-center justify-between gap-2">
+        <div className="text-sm">{w.type}</div>
+        <div className="flex items-center gap-2">
           {w.calories != null && (
-            <span style={{ fontSize: 12, color: 'var(--muted-foreground)' }}>{fmt.format(w.calories)} kcal</span>
+            <span className="text-xs text-muted-foreground">{fmt.format(w.calories)} kcal</span>
           )}
           <SourceBadge source={w.source} />
-          <button
+          <Button
+            size="sm"
+            variant="outline"
             disabled={busy}
             onClick={async (e) => {
               e.stopPropagation()
@@ -129,24 +137,13 @@ function DuplicateRow({ w, onPin }: { w: Workout; onPin: () => Promise<void> }) 
                 setBusy(false)
               }
             }}
-            style={{ padding: '4px 8px', fontSize: 11 }}
           >
-            use this
-          </button>
+            Use this
+          </Button>
         </div>
       </div>
-    </div>
+    </Card>
   )
-}
-
-const cardStyle: React.CSSProperties = {
-  background: 'var(--surface)',
-  border: '1px solid var(--border)',
-  borderRadius: 12,
-  padding: 14,
-  display: 'flex',
-  flexDirection: 'column',
-  gap: 10,
 }
 
 function sumZones(arr: Array<ZoneMinutes | null>): ZoneMinutes | null {
@@ -168,11 +165,15 @@ function sumZones(arr: Array<ZoneMinutes | null>): ZoneMinutes | null {
 function timeRange(startIso: string, endIso: string): string {
   const start = new Date(startIso)
   const end = new Date(endIso)
-  const fmt = new Intl.DateTimeFormat(undefined, { hour: '2-digit', minute: '2-digit' })
-  return `${fmt.format(start)} – ${fmt.format(end)}`
+  const f = new Intl.DateTimeFormat(undefined, { hour: '2-digit', minute: '2-digit' })
+  return `${f.format(start)} – ${f.format(end)}`
 }
 
 function prettyDate(iso: string): string {
   const d = new Date(`${iso}T00:00:00`)
-  return new Intl.DateTimeFormat(undefined, { weekday: 'long', day: 'numeric', month: 'short' }).format(d)
+  return new Intl.DateTimeFormat(undefined, {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'short',
+  }).format(d)
 }

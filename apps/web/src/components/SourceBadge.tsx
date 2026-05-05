@@ -1,24 +1,22 @@
-const COLORS: Record<string, { bg: string; fg: string }> = {
-  oura: { bg: '#1e293b', fg: '#a5b4fc' },
-  strava: { bg: '#3b1d12', fg: '#fb923c' },
-  huawei: { bg: '#1f1414', fg: '#f87171' },
-  frontier_x: { bg: '#0f1f1c', fg: '#34d399' },
-  manual: { bg: '#1c1c1c', fg: '#a3a3a3' },
+import { cn } from '@/lib/utils'
+
+const PALETTE: Record<string, string> = {
+  oura: 'bg-indigo-950/60 text-indigo-300',
+  strava: 'bg-orange-950/60 text-orange-400',
+  huawei: 'bg-red-950/60 text-red-400',
+  frontier_x: 'bg-emerald-950/60 text-emerald-400',
+  withings: 'bg-blue-950/60 text-blue-300',
+  omron: 'bg-cyan-950/60 text-cyan-300',
+  manual: 'bg-muted text-muted-foreground',
 }
 
 export function SourceBadge({ source }: { source: string }) {
-  const c = COLORS[source] ?? { bg: 'var(--surface-2)', fg: 'var(--muted-foreground)' }
   return (
     <span
-      style={{
-        fontSize: 10,
-        padding: '2px 6px',
-        borderRadius: 4,
-        background: c.bg,
-        color: c.fg,
-        textTransform: 'uppercase',
-        letterSpacing: 0.5,
-      }}
+      className={cn(
+        'inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide',
+        PALETTE[source] ?? 'bg-secondary text-muted-foreground',
+      )}
     >
       {source.replace('_', ' ')}
     </span>

@@ -1,4 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
+import { Plus, Trash2 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
 import { AddFoodSheet } from '../components/AddFoodSheet'
 import { api, localIsoDate, type FoodLogEntry } from '../lib/api'
 
@@ -23,8 +26,14 @@ export function Food() {
     void load()
   }, [load])
 
-  if (error) return <div style={{ padding: 24, color: 'var(--danger)' }}>error: {error}</div>
-  if (!entries) return <div style={{ padding: 24 }}>loading…</div>
+  if (error)
+    return (
+      <main className="mx-auto max-w-md px-5 pt-10 text-sm text-destructive">Error: {error}</main>
+    )
+  if (!entries)
+    return (
+      <main className="mx-auto max-w-md px-5 pt-10 text-sm text-muted-foreground">Loading…</main>
+    )
 
   const totals = entries.reduce(
     (acc, e) => ({
@@ -37,36 +46,34 @@ export function Food() {
   )
 
   return (
-    <main style={{ padding: '24px 20px 96px', maxWidth: 480, margin: '0 auto' }}>
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <main className="mx-auto max-w-md space-y-4 px-5 pb-28 pt-6">
+      <header className="flex items-center justify-between">
         <div>
-          <div style={{ fontSize: 12, color: 'var(--muted-foreground)' }}>{prettyDate(date)}</div>
-          <h1 style={{ margin: 0, fontSize: 28 }}>Food</h1>
+          <p className="text-xs uppercase tracking-wide text-muted-foreground">{prettyDate(date)}</p>
+          <h1 className="mt-0.5 text-3xl font-semibold tracking-tight">Food</h1>
         </div>
-        <button
-          onClick={() => setAdding(true)}
-          style={{ background: 'var(--primary)', color: '#0a0a0a', borderColor: 'var(--primary)' }}
-        >
-          + add
-        </button>
+        <Button onClick={() => setAdding(true)} size="sm" className="gap-1.5">
+          <Plus className="h-4 w-4" />
+          Add
+        </Button>
       </header>
 
-      <section style={{ ...cardStyle, marginTop: 20 }}>
-        <div style={{ fontSize: 12, color: 'var(--muted-foreground)', textTransform: 'uppercase' }}>
-          today's intake
-        </div>
-        <div style={{ fontSize: 26, fontWeight: 700 }}>{fmt.format(totals.kcal)} kcal</div>
-        <div style={{ fontSize: 12, color: 'var(--muted-foreground)' }}>
+      <Card className="flex flex-col gap-1 p-4">
+        <span className="text-xs uppercase tracking-wide text-muted-foreground">
+          Today's intake
+        </span>
+        <span className="text-2xl font-bold leading-none">{fmt.format(totals.kcal)} kcal</span>
+        <span className="text-xs text-muted-foreground">
           {totals.p.toFixed(0)}P · {totals.c.toFixed(0)}C · {totals.f.toFixed(0)}F
-        </div>
-      </section>
+        </span>
+      </Card>
 
       {entries.length === 0 ? (
-        <div style={{ marginTop: 24, color: 'var(--muted-foreground)', fontSize: 13 }}>
-          nothing logged yet — tap "+ add" to start.
-        </div>
+        <p className="text-sm text-muted-foreground">
+          Nothing logged yet — tap “Add” to start.
+        </p>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 16 }}>
+        <div className="flex flex-col gap-2">
           {entries.map((e) => (
             <Row
               key={e.id}
@@ -80,12 +87,7 @@ export function Food() {
         </div>
       )}
 
-      <AddFoodSheet
-        open={adding}
-        onClose={() => setAdding(false)}
-        date={date}
-        onAdded={load}
-      />
+      <AddFoodSheet open={adding} onClose={() => setAdding(false)} date={date} onAdded={load} />
     </main>
   )
 }
@@ -93,26 +95,21 @@ export function Food() {
 function Row({ entry, onDelete }: { entry: FoodLogEntry; onDelete: () => Promise<void> }) {
   const [busy, setBusy] = useState(false)
   return (
-    <div style={cardStyle}>
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'flex-start',
-          gap: 8,
-        }}
-      >
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <span style={{ fontSize: 14 }}>{entry.sourceLabel ?? '(unknown food)'}</span>
-          <span style={{ fontSize: 11, color: 'var(--muted-foreground)' }}>
-            {entry.quantityG}g
-            {entry.time ? ` · ${entry.time.slice(0, 5)}` : ''}
+    <Card className="p-3">
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex flex-col">
+          <span className="text-sm">{entry.sourceLabel ?? '(unknown food)'}</span>
+          <span className="text-[11px] text-muted-foreground">
+            {entry.quantityG}g{entry.time ? ` · ${entry.time.slice(0, 5)}` : ''}
           </span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontSize: 14, fontWeight: 600 }}>{fmt.format(entry.kcal)}</span>
-          <button
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-semibold">{fmt.format(entry.kcal)}</span>
+          <Button
+            variant="ghost"
+            size="icon"
             disabled={busy}
+            className="h-8 w-8 text-muted-foreground hover:text-destructive"
             onClick={async () => {
               setBusy(true)
               try {
@@ -121,29 +118,21 @@ function Row({ entry, onDelete }: { entry: FoodLogEntry; onDelete: () => Promise
                 setBusy(false)
               }
             }}
-            style={{ padding: '4px 8px', fontSize: 11, color: 'var(--danger)' }}
+            aria-label="Delete entry"
           >
-            delete
-          </button>
+            <Trash2 className="h-4 w-4" />
+          </Button>
         </div>
       </div>
-    </div>
+    </Card>
   )
-}
-
-const cardStyle: React.CSSProperties = {
-  background: 'var(--surface)',
-  border: '1px solid var(--border)',
-  borderRadius: 12,
-  padding: 14,
-  display: 'flex',
-  flexDirection: 'column',
-  gap: 6,
 }
 
 function prettyDate(iso: string): string {
   const d = new Date(`${iso}T00:00:00`)
-  return new Intl.DateTimeFormat(undefined, { weekday: 'long', day: 'numeric', month: 'short' }).format(
-    d,
-  )
+  return new Intl.DateTimeFormat(undefined, {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'short',
+  }).format(d)
 }

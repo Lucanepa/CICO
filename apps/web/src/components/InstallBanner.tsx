@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import { Download } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
 type BeforeInstallPromptEvent = Event & {
   prompt: () => Promise<void>
@@ -29,55 +31,36 @@ export function InstallBanner() {
   if (window.matchMedia('(display-mode: standalone)').matches) return null
 
   return (
-    <div
-      style={{
-        position: 'fixed',
-        bottom: 70,
-        left: 12,
-        right: 12,
-        background: 'var(--surface-2)',
-        border: '1px solid var(--border)',
-        borderRadius: 12,
-        padding: '12px 14px',
-        display: 'flex',
-        alignItems: 'center',
-        gap: 12,
-        zIndex: 20,
-        maxWidth: 480,
-        margin: '0 auto',
-      }}
-    >
-      <div style={{ flex: 1, fontSize: 13 }}>
-        <div style={{ fontWeight: 600 }}>Install CICO</div>
-        <div style={{ color: 'var(--muted-foreground)', fontSize: 11 }}>
-          home-screen access, works offline
+    <div className="fixed inset-x-3 bottom-[70px] z-20 mx-auto flex max-w-md items-center gap-3 rounded-xl border border-border bg-card/95 p-3 backdrop-blur shadow-lg">
+      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary">
+        <Download className="h-4 w-4" />
+      </div>
+      <div className="flex-1">
+        <div className="text-sm font-semibold">Install CICO</div>
+        <div className="text-[11px] text-muted-foreground">
+          Home-screen access, works offline.
         </div>
       </div>
-      <button
+      <Button
+        variant="ghost"
+        size="sm"
         onClick={() => {
           localStorage.setItem(DISMISS_KEY, '1')
           setDismissed(true)
         }}
-        style={{ padding: '4px 8px', fontSize: 12 }}
       >
-        later
-      </button>
-      <button
+        Later
+      </Button>
+      <Button
+        size="sm"
         onClick={async () => {
           await event.prompt()
           await event.userChoice
           setEvent(null)
         }}
-        style={{
-          padding: '6px 12px',
-          fontSize: 12,
-          background: 'var(--primary)',
-          color: '#0a0a0a',
-          borderColor: 'var(--primary)',
-        }}
       >
-        install
-      </button>
+        Install
+      </Button>
     </div>
   )
 }
