@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { api, type BodyMeasurement } from '../lib/api'
+import { LogBodySheet } from './LogBodySheet'
 
 const fmt1 = new Intl.NumberFormat('en-US', { maximumFractionDigits: 1 })
 const fmt0 = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 })
@@ -7,53 +8,79 @@ const fmt0 = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 })
 export function BodyCard() {
   const [m, setM] = useState<BodyMeasurement | null | undefined>(undefined)
   const [error, setError] = useState<string | null>(null)
+  const [sheetOpen, setSheetOpen] = useState(false)
 
-  useEffect(() => {
-    let cancelled = false
-    void (async () => {
-      try {
-        const res = await api.bodyLatest()
-        if (!cancelled) setM(res.measurement)
-      } catch (err) {
-        if (!cancelled) setError((err as Error).message)
-      }
-    })()
-    return () => {
-      cancelled = true
+  const load = useCallback(async () => {
+    try {
+      const res = await api.bodyLatest()
+      setM(res.measurement)
+    } catch (err) {
+      setError((err as Error).message)
     }
   }, [])
 
+  useEffect(() => {
+    void load()
+  }, [load])
+
   if (m === undefined) return null
   if (error) return null
-  if (!m) return null
 
-  const measured = m.measuredAt ? new Date(m.measuredAt) : null
+  const measured = m?.measuredAt ? new Date(m.measuredAt) : null
   const ago = measured ? humanAgo(measured) : null
 
   return (
     <section style={cardStyle}>
       <div style={headerRow}>
         <span style={label}>Body</span>
-        <span style={badge}>
-          {m.source}
-          {ago ? ` · ${ago}` : ''}
-        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {m && (
+            <span style={badge}>
+              {m.source}
+              {ago ? ` · ${ago}` : ''}
+            </span>
+          )}
+          <button
+            type="button"
+            onClick={() => setSheetOpen(true)}
+            style={{ padding: '4px 10px' }}
+          >
+            log
+          </button>
+        </div>
       </div>
-      <div style={statsGrid}>
-        {m.weightKg != null && <Stat label="Weight" value={`${fmt1.format(m.weightKg)} kg`} />}
-        {m.fatPct != null && <Stat label="Fat" value={`${fmt1.format(m.fatPct)} %`} />}
-        {m.muscleMassKg != null && (
-          <Stat label="Muscle" value={`${fmt1.format(m.muscleMassKg)} kg`} />
-        )}
-        {m.skeletalMusclePct != null && m.muscleMassKg == null && (
-          <Stat label="Skeletal muscle" value={`${fmt1.format(m.skeletalMusclePct)} %`} />
-        )}
-        {m.waterPct != null && <Stat label="Water" value={`${fmt1.format(m.waterPct)} %`} />}
-        {m.visceralFat != null && (
-          <Stat label="Visceral" value={fmt1.format(m.visceralFat)} />
-        )}
-        {m.bmrKcal != null && <Stat label="BMR" value={`${fmt0.format(m.bmrKcal)} kcal`} />}
-      </div>
+
+      {!m && (
+        <div style={{ fontSize: 12, color: 'var(--muted)' }}>
+          No measurements yet — tap "log" to add one.
+        </div>
+      )}
+
+      {m && (
+        <div style={statsGrid}>
+          {m.weightKg != null && <Stat label="Weight" value={`${fmt1.format(m.weightKg)} kg`} />}
+          {m.fatPct != null && <Stat label="Fat" value={`${fmt1.format(m.fatPct)} %`} />}
+          {m.muscleMassKg != null && (
+            <Stat label="Muscle" value={`${fmt1.format(m.muscleMassKg)} kg`} />
+          )}
+          {m.skeletalMusclePct != null && m.muscleMassKg == null && (
+            <Stat label="Skeletal muscle" value={`${fmt1.format(m.skeletalMusclePct)} %`} />
+          )}
+          {m.waterPct != null && <Stat label="Water" value={`${fmt1.format(m.waterPct)} %`} />}
+          {m.visceralFat != null && (
+            <Stat label="Visceral" value={fmt1.format(m.visceralFat)} />
+          )}
+          {m.bmrKcal != null && <Stat label="BMR" value={`${fmt0.format(m.bmrKcal)} kcal`} />}
+        </div>
+      )}
+
+      <LogBodySheet
+        open={sheetOpen}
+        onClose={() => setSheetOpen(false)}
+        onSaved={() => {
+          void load()
+        }}
+      />
     </section>
   )
 }
