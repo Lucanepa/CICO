@@ -4,6 +4,7 @@ const items = [
   { to: '/', label: 'Today' },
   { to: '/activity', label: 'Activity' },
   { to: '/food', label: 'Food' },
+  { to: '/trends', label: 'Trends' },
 ]
 
 export function BottomNav() {

@@ -77,6 +77,16 @@ export type RecipeImport = {
   source: 'jsonld'
 }
 
+export type TrendDay = {
+  date: string
+  intake: number
+  burn: number
+  net: number
+  sleepScore: number | null
+  z2plusMinutes: number
+  weightKg: number | null
+}
+
 export type FoodLogEntry = {
   id: string
   date: string
@@ -156,6 +166,8 @@ export const api = {
     fiber100g?: number | null
     defaultServingG?: number | null
   }) => send<{ ok: boolean; food: SearchHit }>(`/api/foods/custom`, 'POST', body),
+  trends: (days: number) =>
+    get<{ ok: boolean; days: TrendDay[] }>(`/api/trends?days=${days}`),
   addFoodLog: (body: {
     date: string
     time?: string
