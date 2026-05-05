@@ -37,6 +37,46 @@ export type Workout = {
   duplicateOf: string | null
 }
 
+export type SearchHit = {
+  id: string
+  table: 'foods' | 'custom_foods'
+  source: string
+  name: string
+  kcal100g: number
+  p100g: number | null
+  c100g: number | null
+  f100g: number | null
+  defaultServingG: number | null
+  barcode?: string | null
+}
+
+export type OcrResult = {
+  name: string
+  kcal_100g: number
+  protein_100g: number | null
+  carbs_100g: number | null
+  fat_100g: number | null
+  fiber_100g: number | null
+  default_serving_g: number | null
+  barcode: string | null
+  confidence: 'high' | 'medium' | 'low'
+  warnings: string[]
+}
+
+export type RecipeImport = {
+  name: string
+  kcal100g: number | null
+  p100g: number | null
+  c100g: number | null
+  f100g: number | null
+  fiber100g: number | null
+  defaultServingG: number | null
+  servings: number | null
+  totalKcal: number | null
+  url: string
+  source: 'jsonld'
+}
+
 export type FoodLogEntry = {
   id: string
   date: string
@@ -88,6 +128,41 @@ export const api = {
       maxHr: number
     }>(`/api/workouts/${id}`),
   pinPrimary: (id: string) => send<{ ok: boolean }>(`/api/workouts/pin-primary`, 'POST', { id }),
+
+  searchFoods: (q: string) =>
+    get<{ ok: boolean; hits: SearchHit[]; sources: string[] }>(
+      `/api/foods/search?q=${encodeURIComponent(q)}`,
+    ),
+  byBarcode: (code: string) =>
+    get<{ ok: boolean; hit: SearchHit | null }>(`/api/foods/barcode/${encodeURIComponent(code)}`),
+  ocr: (imageBase64: string, mimeType: string, persist = false) =>
+    send<{ ok: boolean; ocr: OcrResult; food?: SearchHit; persisted: boolean }>(
+      `/api/foods/ocr`,
+      'POST',
+      { imageBase64, mimeType, persist },
+    ),
+  fromUrl: (url: string, persist = false) =>
+    send<{ ok: boolean; recipe: RecipeImport; food?: SearchHit; persisted: boolean }>(
+      `/api/foods/from-url`,
+      'POST',
+      { url, persist },
+    ),
+  addCustomFood: (body: {
+    name: string
+    kcal100g: number
+    p100g?: number | null
+    c100g?: number | null
+    f100g?: number | null
+    fiber100g?: number | null
+    defaultServingG?: number | null
+  }) => send<{ ok: boolean; food: SearchHit }>(`/api/foods/custom`, 'POST', body),
+  addFoodLog: (body: {
+    date: string
+    time?: string
+    foodId: string
+    foodTable: 'foods' | 'custom_foods'
+    quantityG: number
+  }) => send<{ ok: boolean; entry: FoodLogEntry }>(`/api/food-log`, 'POST', body),
 }
 
 export function localIsoDate(): string {
