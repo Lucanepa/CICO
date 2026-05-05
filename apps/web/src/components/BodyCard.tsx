@@ -204,9 +204,12 @@ function Stat({
 function humanAgo(d: Date): string {
   const ms = Date.now() - d.getTime()
   const min = Math.floor(ms / 60_000)
+  if (min < 1) return 'Just now'
   if (min < 60) return `${min}m ago`
   const hr = Math.floor(min / 60)
   if (hr < 24) return `${hr}h ago`
   const days = Math.floor(hr / 24)
-  return `${days}d ago`
+  if (days === 1) return 'Yesterday'
+  if (days < 7) return `${days}d ago`
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }

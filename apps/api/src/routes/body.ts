@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gte, lte } from 'drizzle-orm'
+import { and, asc, desc, eq, gte, isNotNull, lte, or } from 'drizzle-orm'
 import { Hono } from 'hono'
 import { z } from 'zod'
 import { schema } from '@cico/db'
@@ -172,6 +172,17 @@ export function bodyRoute(env: Env) {
           eq(schema.bodyMeasurements.userId, userId),
           gte(schema.bodyMeasurements.date, startDate),
           lte(schema.bodyMeasurements.date, endDate),
+          // Drop empty groups (Withings sometimes emits measure-groups with no values)
+          or(
+            isNotNull(schema.bodyMeasurements.weightKg),
+            isNotNull(schema.bodyMeasurements.fatPct),
+            isNotNull(schema.bodyMeasurements.muscleMassKg),
+            isNotNull(schema.bodyMeasurements.skeletalMusclePct),
+            isNotNull(schema.bodyMeasurements.boneMassKg),
+            isNotNull(schema.bodyMeasurements.waterPct),
+            isNotNull(schema.bodyMeasurements.visceralFat),
+            isNotNull(schema.bodyMeasurements.bmrKcal),
+          ),
         ),
       )
       .orderBy(asc(schema.bodyMeasurements.date), asc(schema.bodyMeasurements.measuredAt))
