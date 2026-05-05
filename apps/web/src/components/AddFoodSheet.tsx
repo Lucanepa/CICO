@@ -1,4 +1,9 @@
 import { useState } from 'react'
+import { Camera, Link2, Search, ScanBarcode } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { cn } from '@/lib/utils'
 import { api, type SearchHit } from '../lib/api'
 import { Sheet } from './Sheet'
 
@@ -10,6 +15,13 @@ type Props = {
   date: string
   onAdded: () => void
 }
+
+const MODES: Array<{ key: Mode; label: string; icon: typeof Search }> = [
+  { key: 'search', label: 'Search', icon: Search },
+  { key: 'barcode', label: 'Barcode', icon: ScanBarcode },
+  { key: 'photo', label: 'Photo', icon: Camera },
+  { key: 'url', label: 'URL', icon: Link2 },
+]
 
 export function AddFoodSheet({ open, onClose, date, onAdded }: Props) {
   const [mode, setMode] = useState<Mode>('search')
@@ -27,18 +39,16 @@ export function AddFoodSheet({ open, onClose, date, onAdded }: Props) {
         reset()
         onClose()
       }}
-      title="add food"
+      title="Add food"
     >
       {!picked && (
-        <>
+        <div className="space-y-4">
           <ModeTabs mode={mode} onChange={setMode} />
-          <div style={{ marginTop: 16 }}>
-            {mode === 'search' && <SearchPane onPick={setPicked} />}
-            {mode === 'barcode' && <BarcodePane onPick={setPicked} />}
-            {mode === 'photo' && <PhotoPane onPick={setPicked} />}
-            {mode === 'url' && <UrlPane onPick={setPicked} />}
-          </div>
-        </>
+          {mode === 'search' && <SearchPane onPick={setPicked} />}
+          {mode === 'barcode' && <BarcodePane onPick={setPicked} />}
+          {mode === 'photo' && <PhotoPane onPick={setPicked} />}
+          {mode === 'url' && <UrlPane onPick={setPicked} />}
+        </div>
       )}
       {picked && (
         <QuantityPane
@@ -56,35 +66,23 @@ export function AddFoodSheet({ open, onClose, date, onAdded }: Props) {
   )
 }
 
-const TAB_LABELS: Record<Mode, string> = {
-  search: 'search',
-  barcode: 'barcode',
-  photo: 'photo',
-  url: 'url',
-}
-
 function ModeTabs({ mode, onChange }: { mode: Mode; onChange: (m: Mode) => void }) {
   return (
-    <div
-      style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(4, 1fr)',
-        gap: 6,
-      }}
-    >
-      {(Object.keys(TAB_LABELS) as Mode[]).map((m) => (
+    <div className="grid grid-cols-4 gap-1 rounded-lg bg-muted p-1">
+      {MODES.map(({ key, label, icon: Icon }) => (
         <button
-          key={m}
-          onClick={() => onChange(m)}
-          style={{
-            padding: '8px 0',
-            fontSize: 12,
-            background: mode === m ? 'var(--primary)' : 'var(--surface-2)',
-            color: mode === m ? '#0a0a0a' : 'var(--text)',
-            borderColor: mode === m ? 'var(--primary)' : 'var(--border)',
-          }}
+          key={key}
+          type="button"
+          onClick={() => onChange(key)}
+          className={cn(
+            'flex flex-col items-center justify-center gap-1 rounded-md py-2 text-[11px] transition-colors',
+            mode === key
+              ? 'bg-background text-foreground shadow'
+              : 'text-muted-foreground hover:text-foreground',
+          )}
         >
-          {TAB_LABELS[m]}
+          <Icon className="h-4 w-4" />
+          {label}
         </button>
       ))}
     </div>
@@ -112,21 +110,20 @@ function SearchPane({ onPick }: { onPick: (hit: SearchHit) => void }) {
   }
 
   return (
-    <div>
-      <input
+    <div className="space-y-3">
+      <Input
         autoFocus
         value={q}
         onChange={(e) => void search(e.target.value)}
-        placeholder="search foods"
-        style={inputStyle}
+        placeholder="Search foods"
       />
-      <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 6 }}>
-        {busy && <span style={{ color: 'var(--muted-foreground)', fontSize: 12 }}>searching…</span>}
+      <div className="flex flex-col gap-1.5">
+        {busy && <span className="text-xs text-muted-foreground">Searching…</span>}
         {hits.map((h) => (
           <HitRow key={`${h.table}:${h.id}`} hit={h} onPick={() => onPick(h)} />
         ))}
         {!busy && q.length >= 2 && hits.length === 0 && (
-          <span style={{ color: 'var(--muted-foreground)', fontSize: 12 }}>no results</span>
+          <span className="text-xs text-muted-foreground">No results.</span>
         )}
       </div>
     </div>
@@ -144,7 +141,7 @@ function BarcodePane({ onPick }: { onPick: (hit: SearchHit) => void }) {
     try {
       const res = await api.byBarcode(code.trim())
       if (!res.hit) {
-        setError('not found')
+        setError('Not found')
         return
       }
       onPick(res.hit)
@@ -156,19 +153,18 @@ function BarcodePane({ onPick }: { onPick: (hit: SearchHit) => void }) {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-      <input
+    <div className="space-y-3">
+      <Input
         autoFocus
         value={code}
         onChange={(e) => setCode(e.target.value)}
-        placeholder="barcode (EAN/UPC)"
+        placeholder="Barcode (EAN/UPC)"
         inputMode="numeric"
-        style={inputStyle}
       />
-      <button onClick={lookup} disabled={busy || code.length < 6}>
-        {busy ? 'looking up…' : 'lookup'}
-      </button>
-      {error && <span style={{ color: 'var(--danger)', fontSize: 12 }}>{error}</span>}
+      <Button onClick={lookup} disabled={busy || code.length < 6} className="w-full">
+        {busy ? 'Looking up…' : 'Lookup'}
+      </Button>
+      {error && <p className="text-xs text-destructive">{error}</p>}
     </div>
   )
 }
@@ -190,7 +186,7 @@ function PhotoPane({ onPick }: { onPick: (hit: SearchHit) => void }) {
       const res = await api.ocr(base64, mt, true)
       if (res.ocr.warnings?.length) setWarnings(res.ocr.warnings)
       if (!res.food) {
-        setError('OCR did not return a usable food')
+        setError('OCR did not return a usable food.')
         return
       }
       onPick(res.food)
@@ -202,11 +198,11 @@ function PhotoPane({ onPick }: { onPick: (hit: SearchHit) => void }) {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-      <p style={{ fontSize: 12, color: 'var(--muted-foreground)', margin: 0 }}>
-        snap a nutrition label. macros are extracted via Claude.
+    <div className="space-y-3">
+      <p className="text-xs text-muted-foreground">
+        Snap a nutrition label. Macros are extracted via Claude.
       </p>
-      <input
+      <Input
         type="file"
         accept="image/*"
         capture="environment"
@@ -214,16 +210,17 @@ function PhotoPane({ onPick }: { onPick: (hit: SearchHit) => void }) {
           const file = e.target.files?.[0]
           if (file) void handleFile(file)
         }}
+        className="file:mr-3 file:rounded file:border-0 file:bg-secondary file:px-3 file:py-1 file:text-foreground"
       />
-      {busy && <span style={{ color: 'var(--muted-foreground)', fontSize: 12 }}>extracting…</span>}
+      {busy && <p className="text-xs text-muted-foreground">Extracting…</p>}
       {warnings.length > 0 && (
-        <ul style={{ color: 'var(--warn)', fontSize: 12, marginTop: 0 }}>
+        <ul className="list-disc pl-5 text-xs text-warning">
           {warnings.map((w, i) => (
             <li key={i}>{w}</li>
           ))}
         </ul>
       )}
-      {error && <span style={{ color: 'var(--danger)', fontSize: 12 }}>{error}</span>}
+      {error && <p className="text-xs text-destructive">{error}</p>}
     </div>
   )
 }
@@ -239,7 +236,7 @@ function UrlPane({ onPick }: { onPick: (hit: SearchHit) => void }) {
     try {
       const res = await api.fromUrl(url, true)
       if (!res.food) {
-        setError('recipe missing per-serving info — open it manually')
+        setError('Recipe missing per-serving info — open it manually.')
         return
       }
       onPick(res.food)
@@ -251,19 +248,18 @@ function UrlPane({ onPick }: { onPick: (hit: SearchHit) => void }) {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-      <input
+    <div className="space-y-3">
+      <Input
         autoFocus
         type="url"
         value={url}
         onChange={(e) => setUrl(e.target.value)}
-        placeholder="https://..."
-        style={inputStyle}
+        placeholder="https://…"
       />
-      <button onClick={importIt} disabled={busy || !/^https?:\/\//.test(url)}>
-        {busy ? 'fetching…' : 'import recipe'}
-      </button>
-      {error && <span style={{ color: 'var(--danger)', fontSize: 12 }}>{error}</span>}
+      <Button onClick={importIt} disabled={busy || !/^https?:\/\//.test(url)} className="w-full">
+        {busy ? 'Fetching…' : 'Import recipe'}
+      </Button>
+      {error && <p className="text-xs text-destructive">{error}</p>}
     </div>
   )
 }
@@ -271,23 +267,20 @@ function UrlPane({ onPick }: { onPick: (hit: SearchHit) => void }) {
 function HitRow({ hit, onPick }: { hit: SearchHit; onPick: () => void }) {
   return (
     <button
+      type="button"
       onClick={onPick}
-      style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        textAlign: 'left',
-        padding: 10,
-      }}
+      className="flex items-center justify-between rounded-md border border-border bg-background px-3 py-2 text-left transition-colors hover:bg-muted"
     >
-      <div style={{ display: 'flex', flexDirection: 'column' }}>
-        <span style={{ fontSize: 14 }}>{hit.name}</span>
-        <span style={{ fontSize: 11, color: 'var(--muted-foreground)' }}>
+      <div className="flex flex-col">
+        <span className="text-sm">{hit.name}</span>
+        <span className="text-[11px] text-muted-foreground">
           {hit.source}
           {hit.barcode ? ` · ${hit.barcode}` : ''}
         </span>
       </div>
-      <span style={{ fontSize: 13, fontWeight: 600 }}>{Math.round(hit.kcal100g)} kcal/100g</span>
+      <span className="text-sm font-semibold">
+        {Math.round(hit.kcal100g)} <span className="text-[10px] text-muted-foreground">kcal/100g</span>
+      </span>
     </button>
   )
 }
@@ -324,48 +317,42 @@ function QuantityPane({
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-      <div style={{ fontSize: 14, fontWeight: 600 }}>{hit.name}</div>
-      <div style={{ fontSize: 12, color: 'var(--muted-foreground)' }}>
-        {hit.kcal100g.toFixed(0)} kcal · {hit.p100g ?? '—'} P · {hit.c100g ?? '—'} C ·{' '}
-        {hit.f100g ?? '—'} F (per 100g)
+    <div className="space-y-4">
+      <div>
+        <div className="text-base font-semibold">{hit.name}</div>
+        <div className="mt-1 text-xs text-muted-foreground">
+          {hit.kcal100g.toFixed(0)} kcal · {hit.p100g ?? '—'}P · {hit.c100g ?? '—'}C ·{' '}
+          {hit.f100g ?? '—'}F (per 100g)
+        </div>
       </div>
-      <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-        <span style={{ fontSize: 12, color: 'var(--muted-foreground)' }}>grams</span>
-        <input
+
+      <div className="space-y-1.5">
+        <Label htmlFor="grams">Grams</Label>
+        <Input
+          id="grams"
           type="number"
           min={1}
           step={1}
           value={grams}
           onChange={(e) => setGrams(Math.max(1, Number(e.target.value) || 0))}
-          style={inputStyle}
         />
-      </label>
-      <div style={{ fontSize: 22, fontWeight: 600 }}>≈ {kcal} kcal</div>
-      <div style={{ display: 'flex', gap: 8 }}>
-        <button onClick={onCancel} style={{ flex: 1 }}>
-          back
-        </button>
-        <button
-          onClick={save}
-          disabled={busy}
-          style={{ flex: 2, background: 'var(--primary)', color: '#0a0a0a', borderColor: 'var(--primary)' }}
-        >
-          {busy ? 'saving…' : 'add to log'}
-        </button>
+      </div>
+
+      <div className="rounded-lg bg-muted px-4 py-3 text-center">
+        <div className="text-xs uppercase tracking-wide text-muted-foreground">Estimated</div>
+        <div className="text-2xl font-bold">{kcal} kcal</div>
+      </div>
+
+      <div className="flex gap-2">
+        <Button variant="outline" onClick={onCancel} className="flex-1">
+          Back
+        </Button>
+        <Button onClick={save} disabled={busy} className="flex-[2]">
+          {busy ? 'Saving…' : 'Add to log'}
+        </Button>
       </div>
     </div>
   )
-}
-
-const inputStyle: React.CSSProperties = {
-  width: '100%',
-  padding: '10px 12px',
-  background: 'var(--surface-2)',
-  color: 'var(--text)',
-  border: '1px solid var(--border)',
-  borderRadius: 10,
-  fontSize: 14,
 }
 
 function fileToBase64(file: File): Promise<string> {
