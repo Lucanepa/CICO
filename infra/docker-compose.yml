@@ -3,14 +3,13 @@ name: cico
 services:
   postgres:
     image: postgres:17-alpine
+    container_name: cico-postgres
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
       TZ: ${TZ:-Europe/Zurich}
-    ports:
-      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - ${PGDATA_PATH:-./pgdata}:/var/lib/postgresql/data
     healthcheck:
@@ -23,6 +22,8 @@ services:
     build:
       context: ..
       dockerfile: apps/api/Dockerfile
+    container_name: cico-api
+    hostname: cico-api
     restart: unless-stopped
     depends_on:
       postgres:
@@ -32,6 +33,8 @@ services:
       DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       SESSION_SECRET: ${SESSION_SECRET}
       TZ: ${TZ:-Europe/Zurich}
+      WEB_BASE_URL: ${WEB_BASE_URL}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
       SENTRY_DSN_API: ${SENTRY_DSN_API}
       SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-production}
       OURA_CLIENT_ID: ${OURA_CLIENT_ID}
@@ -45,15 +48,18 @@ services:
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
       GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI}
       GOOGLE_DRIVE_FOLDER_ID: ${GOOGLE_DRIVE_FOLDER_ID}
+      USDA_API_KEY: ${USDA_API_KEY}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
       CRON_PREWARM_SCHEDULE: ${CRON_PREWARM_SCHEDULE:-0 3 * * *}
+      DEFAULT_USER_EMAIL: ${DEFAULT_USER_EMAIL:-me@cico.local}
+    networks:
+      - default
+      - tunnel
     expose:
       - "8787"
 
-  cloudflared:
-    image: cloudflare/cloudflared:latest
-    restart: unless-stopped
-    command: tunnel --no-autoupdate run
-    environment:
-      TUNNEL_TOKEN: ${TUNNEL_TOKEN}
-    depends_on:
-      - api
+networks:
+  default:
+  tunnel:
+    name: ${TUNNEL_NETWORK:-cloudflared}
+    external: true
