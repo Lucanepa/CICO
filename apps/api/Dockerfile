@@ -20,11 +20,13 @@ RUN pnpm --filter @cico/shared build \
 
 FROM base AS runtime
 ENV NODE_ENV=production
+COPY --from=build /app/pnpm-workspace.yaml /app/package.json /app/pnpm-lock.yaml ./
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/packages ./packages
 COPY --from=build /app/apps/api/dist ./apps/api/dist
 COPY --from=build /app/apps/api/public ./apps/api/public
 COPY --from=build /app/apps/api/package.json ./apps/api/
+COPY --from=build /app/apps/api/node_modules ./apps/api/node_modules
 WORKDIR /app/apps/api
 EXPOSE 8787
 CMD ["node", "--import", "./dist/instrument.js", "dist/index.js"]
