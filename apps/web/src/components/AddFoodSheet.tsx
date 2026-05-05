@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Camera, Link2, Search, ScanBarcode } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -6,6 +6,13 @@ import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
 import { api, type SearchHit } from '../lib/api'
 import { Sheet } from './Sheet'
+
+declare class BarcodeDetectorCtor {
+  constructor(options?: { formats?: string[] })
+  detect(source: HTMLVideoElement | HTMLImageElement | HTMLCanvasElement): Promise<
+    Array<{ rawValue: string; format: string }>
+  >
+}
 
 type Mode = 'search' | 'barcode' | 'photo' | 'url'
 
@@ -134,12 +141,18 @@ function BarcodePane({ onPick }: { onPick: (hit: SearchHit) => void }) {
   const [code, setCode] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const [scanning, setScanning] = useState(false)
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const streamRef = useRef<MediaStream | null>(null)
+  const stopScanRef = useRef<(() => void) | null>(null)
 
-  const lookup = async () => {
+  const lookup = async (raw: string) => {
+    const c = raw.trim()
+    if (c.length < 6) return
     setBusy(true)
     setError(null)
     try {
-      const res = await api.byBarcode(code.trim())
+      const res = await api.byBarcode(c)
       if (!res.hit) {
         setError('Not found')
         return
@@ -152,16 +165,116 @@ function BarcodePane({ onPick }: { onPick: (hit: SearchHit) => void }) {
     }
   }
 
+  const stopScan = useCallback(() => {
+    stopScanRef.current?.()
+    stopScanRef.current = null
+    streamRef.current?.getTracks().forEach((t) => t.stop())
+    streamRef.current = null
+    setScanning(false)
+  }, [])
+
+  useEffect(() => () => stopScan(), [stopScan])
+
+  const startScan = async () => {
+    setError(null)
+    const Detector = (window as unknown as { BarcodeDetector?: typeof BarcodeDetectorCtor }).BarcodeDetector
+    if (!Detector) {
+      setError('Barcode scanner not available on this device — type the code manually below.')
+      return
+    }
+    try {
+      const detector = new Detector({
+        formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39'],
+      })
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: 'environment' } },
+        audio: false,
+      })
+      streamRef.current = stream
+      setScanning(true)
+      // Wait for video element after re-render
+      await new Promise((r) => requestAnimationFrame(r))
+      const video = videoRef.current
+      if (!video) {
+        stopScan()
+        return
+      }
+      video.srcObject = stream
+      await video.play()
+
+      let stopped = false
+      stopScanRef.current = () => {
+        stopped = true
+      }
+      const tick = async () => {
+        if (stopped) return
+        try {
+          const codes = await detector.detect(video)
+          const first = codes[0]?.rawValue
+          if (first) {
+            stopScan()
+            setCode(first)
+            await lookup(first)
+            return
+          }
+        } catch {
+          // ignore individual frame errors
+        }
+        if (!stopped) requestAnimationFrame(() => void tick())
+      }
+      void tick()
+    } catch (err) {
+      stopScan()
+      setError((err as Error).message)
+    }
+  }
+
   return (
     <div className="space-y-3">
+      {!scanning && (
+        <Button onClick={startScan} className="w-full gap-1.5">
+          <Camera className="h-4 w-4" />
+          Scan with camera
+        </Button>
+      )}
+
+      {scanning && (
+        <div className="space-y-2">
+          <div className="relative overflow-hidden rounded-lg border border-border bg-black">
+            <video
+              ref={videoRef}
+              playsInline
+              muted
+              className="aspect-square w-full object-cover"
+            />
+            <div className="pointer-events-none absolute inset-x-6 top-1/2 h-0.5 -translate-y-1/2 bg-primary/80 shadow-[0_0_12px_var(--primary)]" />
+          </div>
+          <Button variant="outline" onClick={stopScan} className="w-full">
+            Stop scanning
+          </Button>
+        </div>
+      )}
+
+      <div className="flex items-center gap-2">
+        <span className="h-px flex-1 bg-border" />
+        <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+          Or enter manually
+        </span>
+        <span className="h-px flex-1 bg-border" />
+      </div>
+
       <Input
-        autoFocus
         value={code}
         onChange={(e) => setCode(e.target.value)}
         placeholder="Barcode (EAN/UPC)"
         inputMode="numeric"
       />
-      <Button onClick={lookup} disabled={busy || code.length < 6} className="w-full">
+      <Button
+        onClick={() => void lookup(code)}
+        disabled={busy || code.length < 6}
+        variant="outline"
+        className="w-full"
+      >
         {busy ? 'Looking up…' : 'Lookup'}
       </Button>
       {error && <p className="text-xs text-destructive">{error}</p>}

@@ -19,7 +19,7 @@ type Props = {
 export function Sheet({ open, onClose, title, children }: Props) {
   return (
     <ShadSheet open={open} onOpenChange={(next) => !next && onClose()}>
-      <SheetContent side="bottom">
+      <SheetContent side="center">
         {title && (
           <SheetHeader>
             <SheetTitle>{title}</SheetTitle>

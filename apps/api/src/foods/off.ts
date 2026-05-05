@@ -54,7 +54,12 @@ export async function offSearch(query: string, pageSize = 25): Promise<IngestedF
     'code,product_name,product_name_en,brands,serving_quantity,nutriments',
   )
 
-  const res = await fetch(url, { headers: { 'user-agent': 'CICO/0.1 (self-hosted)' } })
+  const res = await fetch(url, {
+    headers: {
+      'user-agent': 'CICO/0.1 (https://cico.lucanepa.com; contact: l.canepa@aequitax.pro)',
+      accept: 'application/json',
+    },
+  })
   if (!res.ok) throw new Error(`off search failed: ${res.status}`)
   const json = (await res.json()) as { products: OffProduct[] }
   return json.products.map(mapOff).filter((p): p is IngestedFood => p !== null)
@@ -62,7 +67,12 @@ export async function offSearch(query: string, pageSize = 25): Promise<IngestedF
 
 export async function offByBarcode(barcode: string): Promise<IngestedFood | null> {
   const url = `${PRODUCT}/${encodeURIComponent(barcode)}.json`
-  const res = await fetch(url, { headers: { 'user-agent': 'CICO/0.1 (self-hosted)' } })
+  const res = await fetch(url, {
+    headers: {
+      'user-agent': 'CICO/0.1 (https://cico.lucanepa.com; contact: l.canepa@aequitax.pro)',
+      accept: 'application/json',
+    },
+  })
   if (!res.ok) return null
   const json = (await res.json()) as { status?: number; product?: OffProduct }
   if (!json.product) return null
