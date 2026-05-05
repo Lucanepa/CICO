@@ -1,8 +1,15 @@
 import { and, eq } from 'drizzle-orm'
 import type { Database } from '@cico/db'
 import { schema } from '@cico/db'
+import { replaceHrSamplesForWindow } from '../../lib/hr-samples.js'
 import { getLastSync, markSyncError, markSyncSuccess } from '../../lib/sync-state.js'
-import { getActivity, getActivityZones, stravaListActivities, type StravaOpts } from './client.js'
+import {
+  getActivity,
+  getActivityStreams,
+  getActivityZones,
+  stravaListActivities,
+  type StravaOpts,
+} from './client.js'
 import type { StravaActivity } from './types.js'
 import { stravaZonesToZoneMinutes } from './zones.js'
 
@@ -67,6 +74,23 @@ async function ingestStravaActivity(
       zoneMinutes = stravaZonesToZoneMinutes(zones, hr.age, hr.maxHrOverride)
     } catch (err) {
       console.warn(`[strava] zones fetch failed for ${a.id}:`, err)
+    }
+
+    try {
+      const streams = await getActivityStreams(db, opts, a.id, ['time', 'heartrate'])
+      const time = streams.time?.data ?? []
+      const bpm = streams.heartrate?.data ?? []
+      if (time.length > 0 && time.length === bpm.length) {
+        const samples = bpm
+          .map((value, i) => ({
+            timestamp: new Date(start.getTime() + (time[i] ?? 0) * 1000),
+            bpm: Math.round(value),
+          }))
+          .filter((s) => s.bpm > 30 && s.bpm < 240)
+        await replaceHrSamplesForWindow(db, userId, 'strava', start, end, samples)
+      }
+    } catch (err) {
+      console.warn(`[strava] HR streams fetch failed for ${a.id}:`, err)
     }
   }
 

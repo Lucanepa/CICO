@@ -80,3 +80,20 @@ export function getActivityZones(
 ): Promise<StravaActivityZones> {
   return stravaFetch<StravaActivityZones>(db, opts, `/activities/${id}/zones`)
 }
+
+export type StravaStreamSet = Record<
+  'time' | 'heartrate' | 'distance' | 'latlng' | 'cadence' | 'altitude' | 'velocity_smooth',
+  { data: number[]; series_type?: string; original_size?: number; resolution?: string } | undefined
+>
+
+export async function getActivityStreams(
+  db: Database,
+  opts: StravaOpts,
+  id: number,
+  keys: Array<keyof StravaStreamSet> = ['time', 'heartrate'],
+): Promise<StravaStreamSet> {
+  return stravaFetch<StravaStreamSet>(db, opts, `/activities/${id}/streams`, {
+    keys: keys.join(','),
+    key_by_type: 'true',
+  })
+}

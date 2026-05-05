@@ -1,8 +1,9 @@
 import { and, eq } from 'drizzle-orm'
 import type { Database } from '@cico/db'
 import { schema } from '@cico/db'
+import { replaceHrSamplesForWindow } from '../../lib/hr-samples.js'
 import { markSyncError, markSyncSuccess, getLastSync } from '../../lib/sync-state.js'
-import { ouraPaginate, type OuraOpts } from './client.js'
+import { ouraFetch, ouraPaginate, type OuraOpts } from './client.js'
 import type {
   OuraDailyActivity,
   OuraDailySleep,
@@ -170,6 +171,19 @@ async function syncWorkouts(
       )
       .limit(1)
 
+    const samples = await fetchOuraHrSamples(db, opts, start, end).catch((err) => {
+      console.warn(`[oura] HR fetch failed for ${w.id}:`, err)
+      return [] as { timestamp: Date; bpm: number }[]
+    })
+    if (samples.length > 0) {
+      await replaceHrSamplesForWindow(db, userId, 'oura', start, end, samples)
+    }
+    const avgHr =
+      samples.length > 0
+        ? Math.round(samples.reduce((acc, s) => acc + s.bpm, 0) / samples.length)
+        : null
+    const maxHr = samples.length > 0 ? Math.max(...samples.map((s) => s.bpm)) : null
+
     const values = {
       userId,
       date: w.day,
@@ -180,8 +194,8 @@ async function syncWorkouts(
       type: w.activity,
       durationMin,
       calories: w.calories != null ? Math.round(w.calories) : null,
-      avgHr: null,
-      maxHr: null,
+      avgHr,
+      maxHr,
       zoneMinutesJsonb: null,
       isPrimary: false,
       duplicateOf: null,
@@ -196,6 +210,35 @@ async function syncWorkouts(
     count++
   }
   return count
+}
+
+async function fetchOuraHrSamples(
+  db: Database,
+  opts: OuraOpts,
+  start: Date,
+  end: Date,
+): Promise<{ timestamp: Date; bpm: number }[]> {
+  type Page = {
+    data: Array<{ bpm: number; source: string; timestamp: string }>
+    next_token: string | null
+  }
+  const out: { timestamp: Date; bpm: number }[] = []
+  let nextToken: string | null = null
+  do {
+    const page: Page = await ouraFetch<Page>(db, opts, '/heartrate', {
+      start_datetime: start.toISOString(),
+      end_datetime: end.toISOString(),
+      next_token: nextToken ?? undefined,
+    })
+    for (const s of page.data) {
+      const bpm = Math.round(s.bpm)
+      if (bpm > 30 && bpm < 240) {
+        out.push({ timestamp: new Date(s.timestamp), bpm })
+      }
+    }
+    nextToken = page.next_token
+  } while (nextToken)
+  return out
 }
 
 function isoDate(d: Date): string {
