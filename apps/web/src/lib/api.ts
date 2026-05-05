@@ -101,7 +101,7 @@ export type FoodLogEntry = {
   sourceLabel: string | null
 }
 
-const API_BASE = (import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/$/, '')
+const API_BASE = (import.meta.env.VITE_API_BASE_URL ?? '').trim().replace(/\/$/, '')
 
 function url(path: string): string {
   return API_BASE ? `${API_BASE}${path}` : path
