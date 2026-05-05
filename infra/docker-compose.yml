@@ -57,6 +57,38 @@ services:
     expose:
       - "8787"
 
+  directus:
+    image: directus/directus:11
+    container_name: cico-directus
+    hostname: cico-directus
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      KEY: ${DIRECTUS_KEY}
+      SECRET: ${DIRECTUS_SECRET}
+      ADMIN_EMAIL: ${DIRECTUS_ADMIN_EMAIL}
+      ADMIN_PASSWORD: ${DIRECTUS_ADMIN_PASSWORD}
+      PUBLIC_URL: ${DIRECTUS_PUBLIC_URL:-https://cico-directus.lucanepa.com}
+      DB_CLIENT: pg
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_DATABASE: ${DIRECTUS_DB_DATABASE:-directus}
+      DB_USER: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      CORS_ENABLED: "true"
+      CORS_ORIGIN: ${ALLOWED_ORIGINS}
+      CORS_CREDENTIALS: "true"
+      WEBSOCKETS_ENABLED: "false"
+      TELEMETRY: "false"
+      LOG_LEVEL: ${DIRECTUS_LOG_LEVEL:-info}
+    volumes:
+      - ${DIRECTUS_UPLOADS_PATH:-./directus/uploads}:/directus/uploads
+      - ${DIRECTUS_EXTENSIONS_PATH:-./directus/extensions}:/directus/extensions
+    expose:
+      - "8055"
+
   cloudflared:
     image: cloudflare/cloudflared:latest
     container_name: cico-tunnel
@@ -66,3 +98,4 @@ services:
       TUNNEL_TOKEN: ${TUNNEL_TOKEN}
     depends_on:
       - api
+      - directus
