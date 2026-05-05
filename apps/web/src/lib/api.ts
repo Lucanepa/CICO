@@ -101,16 +101,22 @@ export type FoodLogEntry = {
   sourceLabel: string | null
 }
 
+const API_BASE = (import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/$/, '')
+
+function url(path: string): string {
+  return API_BASE ? `${API_BASE}${path}` : path
+}
+
 async function get<T>(path: string): Promise<T> {
-  const res = await fetch(path, { credentials: 'same-origin' })
+  const res = await fetch(url(path), { credentials: 'include' })
   if (!res.ok) throw new Error(`${path} → ${res.status}`)
   return (await res.json()) as T
 }
 
 async function send<T>(path: string, method: string, body?: unknown): Promise<T> {
-  const res = await fetch(path, {
+  const res = await fetch(url(path), {
     method,
-    credentials: 'same-origin',
+    credentials: 'include',
     headers: body ? { 'content-type': 'application/json' } : {},
     body: body ? JSON.stringify(body) : undefined,
   })

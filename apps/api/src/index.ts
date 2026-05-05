@@ -2,6 +2,7 @@ import { serve } from '@hono/node-server'
 import { serveStatic } from '@hono/node-server/serve-static'
 import * as Sentry from '@sentry/node'
 import { Hono } from 'hono'
+import { cors } from 'hono/cors'
 import { logger } from 'hono/logger'
 import { startCron } from './cron/prewarm.js'
 import { loadEnv } from './lib/env.js'
@@ -21,6 +22,20 @@ const env = loadEnv()
 const app = new Hono()
 
 app.use('*', logger())
+
+if (env.ALLOWED_ORIGINS) {
+  const origins = env.ALLOWED_ORIGINS.split(',').map((s) => s.trim()).filter(Boolean)
+  app.use(
+    '/api/*',
+    cors({
+      origin: (origin) => (origins.includes(origin) ? origin : null),
+      credentials: true,
+      allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+      allowHeaders: ['content-type', 'authorization'],
+      maxAge: 600,
+    }),
+  )
+}
 
 app.route('/api/health', health)
 app.route('/api/refresh', refreshRoute(env))

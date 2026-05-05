@@ -17,10 +17,11 @@ export function stravaOauth(env: Env, getEnv: (k: string) => string | undefined)
     if (!clientId || !redirectUri) return c.json({ error: 'strava_not_configured' }, 500)
 
     const state = crypto.randomUUID()
+    const isProd = env.NODE_ENV === 'production'
     setCookie(c, 'strava_oauth_state', state, {
       httpOnly: true,
-      secure: env.NODE_ENV === 'production',
-      sameSite: 'Lax',
+      secure: isProd,
+      sameSite: isProd ? 'None' : 'Lax',
       maxAge: 600,
       path: '/',
     })
@@ -75,7 +76,7 @@ export function stravaOauth(env: Env, getEnv: (k: string) => string | undefined)
       expiresAt: new Date(json.expires_at * 1000),
       scope: json.scope ?? SCOPES,
     })
-    return c.redirect('/?connected=strava')
+    return c.redirect(`${env.WEB_BASE_URL ?? ''}/?connected=strava`)
   })
 
   return app

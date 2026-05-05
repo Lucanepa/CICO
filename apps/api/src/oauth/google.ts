@@ -17,10 +17,11 @@ export function googleOauth(env: Env, getEnv: (k: string) => string | undefined)
     if (!clientId || !redirectUri) return c.json({ error: 'google_not_configured' }, 500)
 
     const state = crypto.randomUUID()
+    const isProd = env.NODE_ENV === 'production'
     setCookie(c, 'google_oauth_state', state, {
       httpOnly: true,
-      secure: env.NODE_ENV === 'production',
-      sameSite: 'Lax',
+      secure: isProd,
+      sameSite: isProd ? 'None' : 'Lax',
       maxAge: 600,
       path: '/',
     })
@@ -80,7 +81,7 @@ export function googleOauth(env: Env, getEnv: (k: string) => string | undefined)
       expiresAt: json.expires_in ? new Date(Date.now() + json.expires_in * 1000) : null,
       scope: json.scope ?? SCOPE,
     })
-    return c.redirect('/?connected=google')
+    return c.redirect(`${env.WEB_BASE_URL ?? ''}/?connected=google`)
   })
 
   return app

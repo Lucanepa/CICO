@@ -26,6 +26,9 @@ const envSchema = z.object({
 
   USDA_API_KEY: z.string().optional(),
   ANTHROPIC_API_KEY: z.string().optional(),
+
+  ALLOWED_ORIGINS: z.string().optional(),
+  WEB_BASE_URL: z.string().url().optional(),
 })
 
 export type Env = z.infer<typeof envSchema>
