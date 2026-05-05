@@ -4,7 +4,7 @@ Architecture: split origins.
 
 ```
 cico.lucanepa.com         →  Cloudflare Pages  (React PWA)
-api.cico.lucanepa.com     →  Cloudflare Tunnel →  NAS api container
+cico-api.lucanepa.com     →  Cloudflare Tunnel →  NAS api container
 ```
 
 The web is a static SPA on Pages. The Hono API stays on the Synology
@@ -47,7 +47,7 @@ Build env vars:
 
 | Key                    | Value                              |
 |------------------------|------------------------------------|
-| `VITE_API_BASE_URL`    | `https://api.cico.lucanepa.com`    |
+| `VITE_API_BASE_URL`    | `https://cico-api.lucanepa.com`    |
 | `VITE_SENTRY_DSN_WEB`  | (your web Sentry DSN, optional)    |
 | `NODE_VERSION`         | `22`                               |
 
@@ -75,18 +75,18 @@ NODE_ENV=production
 WEB_BASE_URL=https://cico.lucanepa.com
 ALLOWED_ORIGINS=https://cico.lucanepa.com
 
-OURA_REDIRECT_URI=https://api.cico.lucanepa.com/api/oauth/oura/callback
-STRAVA_REDIRECT_URI=https://api.cico.lucanepa.com/api/oauth/strava/callback
-GOOGLE_REDIRECT_URI=https://api.cico.lucanepa.com/api/oauth/google/callback
+OURA_REDIRECT_URI=https://cico-api.lucanepa.com/api/oauth/oura/callback
+STRAVA_REDIRECT_URI=https://cico-api.lucanepa.com/api/oauth/strava/callback
+GOOGLE_REDIRECT_URI=https://cico-api.lucanepa.com/api/oauth/google/callback
 ```
 
 …plus the secrets for Postgres/Oura/Strava/Google/Sentry.
 
 ## 5. Update the OAuth apps
 
-- **Oura developer portal** — add `https://api.cico.lucanepa.com/api/oauth/oura/callback` to the app's redirect URIs.
-- **Strava** — set the Authorization Callback Domain to `api.cico.lucanepa.com`.
-- **Google Cloud Console** — add `https://api.cico.lucanepa.com/api/oauth/google/callback` to the OAuth client's authorized redirect URIs.
+- **Oura developer portal** — add `https://cico-api.lucanepa.com/api/oauth/oura/callback` to the app's redirect URIs.
+- **Strava** — set the Authorization Callback Domain to `cico-api.lucanepa.com`.
+- **Google Cloud Console** — add `https://cico-api.lucanepa.com/api/oauth/google/callback` to the OAuth client's authorized redirect URIs.
 
 ## 6. Deploy
 
@@ -105,13 +105,13 @@ docker compose -f infra/docker-compose.yml up -d --build api cloudflared
 
 ```bash
 # API reachable through tunnel
-curl https://api.cico.lucanepa.com/api/health
+curl https://cico-api.lucanepa.com/api/health
 
 # Frontend serves the SPA
 curl -I https://cico.lucanepa.com/
 
 # CORS preflight succeeds
-curl -i -X OPTIONS https://api.cico.lucanepa.com/api/today \
+curl -i -X OPTIONS https://cico-api.lucanepa.com/api/today \
   -H "Origin: https://cico.lucanepa.com" \
   -H "Access-Control-Request-Method: GET"
 # expect Access-Control-Allow-Origin: https://cico.lucanepa.com
@@ -124,6 +124,6 @@ data populate.
 ## Notes
 
 - **No Cloudflare Pages Functions needed.** Frontend talks directly to the API origin.
-- **Webhook URL** for Strava is now `https://api.cico.lucanepa.com/api/webhooks/strava`. Re-register: `pnpm tsx scripts/strava-subscribe.ts https://api.cico.lucanepa.com`.
+- **Webhook URL** for Strava is now `https://cico-api.lucanepa.com/api/webhooks/strava`. Re-register: `pnpm tsx scripts/strava-subscribe.ts https://cico-api.lucanepa.com`.
 - **Strava webhook verify token** must match `STRAVA_WEBHOOK_VERIFY_TOKEN` in the NAS env.
 - **PWA installability** still works on `cico.lucanepa.com` (HTTPS + manifest + SW).
