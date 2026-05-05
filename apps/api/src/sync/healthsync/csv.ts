@@ -157,3 +157,54 @@ function normalizeDate(d: string): string | null {
 function pickMostRecent(prev: number | undefined, next: number): number {
   return next || prev || 0
 }
+
+export type OmronBodyEvent = {
+  date: string
+  time?: string
+  weightKg?: number
+  fatPct?: number
+  skeletalMusclePct?: number
+  visceralFat?: number
+  bmrKcal?: number
+  bodyAge?: number
+  bmi?: number
+}
+
+export function extractOmronBody(rows: HealthSyncRow[]): OmronBodyEvent[] {
+  const byKey = new Map<string, OmronBodyEvent>()
+  for (const r of rows) {
+    if (!isOmron(r.source)) continue
+    const date = normalizeDate(r.date)
+    if (!date) continue
+    const time = (r.time ?? '').trim() || '00:00:00'
+    const key = `${date}T${time}`
+    let evt = byKey.get(key)
+    if (!evt) {
+      evt = { date, time }
+      byKey.set(key, evt)
+    }
+    const t = r.type.toLowerCase()
+    if (t === 'weight' || (t.includes('weight') && !t.includes('lean'))) {
+      evt.weightKg = r.value
+    } else if (t.includes('body fat') && !t.includes('free') && !t.includes('mass')) {
+      evt.fatPct = r.value
+    } else if (t.includes('skeletal') && t.includes('muscle')) {
+      evt.skeletalMusclePct = r.value
+    } else if (t.includes('visceral')) {
+      evt.visceralFat = r.value
+    } else if (t.includes('basal') && t.includes('metabolic')) {
+      evt.bmrKcal = Math.round(r.value)
+    } else if (t.includes('body age')) {
+      evt.bodyAge = Math.round(r.value)
+    } else if (t === 'bmi' || t.includes('body mass index')) {
+      evt.bmi = r.value
+    }
+  }
+  return [...byKey.values()].sort((a, b) =>
+    `${a.date}T${a.time}`.localeCompare(`${b.date}T${b.time}`),
+  )
+}
+
+function isOmron(source: string): boolean {
+  return source.toLowerCase().includes('omron')
+}

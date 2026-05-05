@@ -24,6 +24,10 @@ const envSchema = z.object({
   GOOGLE_REDIRECT_URI: z.string().optional(),
   GOOGLE_DRIVE_FOLDER_ID: z.string().optional(),
 
+  WITHINGS_CLIENT_ID: z.string().optional(),
+  WITHINGS_CLIENT_SECRET: z.string().optional(),
+  WITHINGS_REDIRECT_URI: z.string().optional(),
+
   USDA_API_KEY: z.string().optional(),
   ANTHROPIC_API_KEY: z.string().optional(),
 

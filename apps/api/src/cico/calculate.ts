@@ -31,14 +31,21 @@ export function computeDailyBalance(date: string, input: CicoInput): CicoBreakdo
   const huawei = input.dailyTotals.find((d) => d.source === 'huawei')
   const oura = input.dailyTotals.find((d) => d.source === 'oura')
   const base = huawei ?? oura ?? null
+  const measuredBmr = input.measuredBmrKcal ?? null
 
   if (!base) flags.push('no_daily_total')
   if (base === huawei && huawei) flags.push('huawei_used')
   if (base === oura && oura) flags.push('oura_fallback')
+  if (!base && measuredBmr != null) flags.push('measured_bmr_used')
 
-  const baseSource: CicoBreakdown['baseSource'] =
-    base === huawei && huawei ? 'huawei' : base === oura && oura ? 'oura' : 'none'
-  const baseTotal = base?.totalCalories ?? 0
+  const baseSource: CicoBreakdown['baseSource'] = base === huawei && huawei
+    ? 'huawei'
+    : base === oura && oura
+      ? 'oura'
+      : measuredBmr != null
+        ? 'measured_bmr'
+        : 'none'
+  const baseTotal = base?.totalCalories ?? (measuredBmr ?? 0)
 
   const baseSourceWorkoutCalories = sumWorkoutCalories(
     input.workouts.filter((w) => baseSource !== 'none' && w.source === baseSource),

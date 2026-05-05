@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { BodyCard } from '../components/BodyCard'
 import { Donut } from '../components/Donut'
 import { api, localIsoDate, type CicoBreakdown } from '../lib/api'
 
@@ -120,6 +121,8 @@ export function Today() {
           <Row label="total" value={breakdown.burn} bold />
         </div>
       </section>
+
+      <BodyCard />
 
       {breakdown.flags.length > 0 && (
         <section style={{ marginTop: 16 }}>

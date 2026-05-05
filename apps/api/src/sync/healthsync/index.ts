@@ -1,7 +1,13 @@
 import type { Database } from '@cico/db'
 import { schema } from '@cico/db'
 import { getLastSync, markSyncError, markSyncSuccess } from '../../lib/sync-state.js'
-import { aggregateHuaweiDaily, parseHealthSyncCsv, type HuaweiDailyAggregate } from './csv.js'
+import {
+  aggregateHuaweiDaily,
+  extractOmronBody,
+  parseHealthSyncCsv,
+  type HuaweiDailyAggregate,
+  type OmronBodyEvent,
+} from './csv.js'
 import {
   downloadFile,
   GoogleNotConnectedError,
@@ -12,6 +18,7 @@ import {
 export type HealthSyncResult = {
   filesProcessed: number
   daysWritten: number
+  omronMeasurements: number
 }
 
 export async function syncHealthSync(
@@ -26,12 +33,14 @@ export async function syncHealthSync(
 
     let filesProcessed = 0
     const aggregates: HuaweiDailyAggregate[] = []
+    const omronEvents: OmronBodyEvent[] = []
 
     for await (const file of listFolderFiles(db, opts, folderId, after)) {
       const text = await downloadFile(db, opts, file.id)
       const rows = parseHealthSyncCsv(text)
       if (rows.length === 0) continue
       aggregates.push(...aggregateHuaweiDaily(rows))
+      omronEvents.push(...extractOmronBody(rows))
       filesProcessed++
     }
 
@@ -68,12 +77,73 @@ export async function syncHealthSync(
       daysWritten++
     }
 
+    let omronMeasurements = 0
+    for (const evt of dedupOmron(omronEvents)) {
+      const measuredAt = new Date(`${evt.date}T${evt.time ?? '00:00:00'}Z`)
+      await db
+        .insert(schema.bodyMeasurements)
+        .values({
+          userId,
+          date: evt.date,
+          measuredAt,
+          time: evt.time ?? null,
+          source: 'omron',
+          sourceId: `${evt.date}T${evt.time ?? '00:00:00'}`,
+          weightKg: evt.weightKg ?? null,
+          fatPct: evt.fatPct ?? null,
+          skeletalMusclePct: evt.skeletalMusclePct ?? null,
+          visceralFat: evt.visceralFat ?? null,
+          bmrKcal: evt.bmrKcal ?? null,
+          bodyAge: evt.bodyAge ?? null,
+          bmi: evt.bmi ?? null,
+          rawPayloadJsonb: evt,
+        })
+        .onConflictDoUpdate({
+          target: [
+            schema.bodyMeasurements.userId,
+            schema.bodyMeasurements.source,
+            schema.bodyMeasurements.sourceId,
+          ],
+          set: {
+            weightKg: evt.weightKg ?? null,
+            fatPct: evt.fatPct ?? null,
+            skeletalMusclePct: evt.skeletalMusclePct ?? null,
+            visceralFat: evt.visceralFat ?? null,
+            bmrKcal: evt.bmrKcal ?? null,
+            bodyAge: evt.bodyAge ?? null,
+            bmi: evt.bmi ?? null,
+            rawPayloadJsonb: evt,
+          },
+        })
+      omronMeasurements++
+    }
+
     await markSyncSuccess(db, 'huawei')
-    return { filesProcessed, daysWritten }
+    return { filesProcessed, daysWritten, omronMeasurements }
   } catch (err) {
     await markSyncError(db, 'huawei', err)
     throw err
   }
+}
+
+function dedupOmron(events: OmronBodyEvent[]): OmronBodyEvent[] {
+  const byKey = new Map<string, OmronBodyEvent>()
+  for (const e of events) {
+    const key = `${e.date}T${e.time ?? '00:00:00'}`
+    const existing = byKey.get(key)
+    if (!existing) {
+      byKey.set(key, { ...e })
+      continue
+    }
+    existing.weightKg = existing.weightKg ?? e.weightKg
+    existing.fatPct = existing.fatPct ?? e.fatPct
+    existing.skeletalMusclePct = existing.skeletalMusclePct ?? e.skeletalMusclePct
+    existing.visceralFat = existing.visceralFat ?? e.visceralFat
+    existing.bmrKcal = existing.bmrKcal ?? e.bmrKcal
+    existing.bodyAge = existing.bodyAge ?? e.bodyAge
+    existing.bmi = existing.bmi ?? e.bmi
+  }
+  return [...byKey.values()]
 }
 
 export { GoogleNotConnectedError }

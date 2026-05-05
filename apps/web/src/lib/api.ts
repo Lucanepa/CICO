@@ -202,6 +202,24 @@ export const api = {
     foodTable: 'foods' | 'custom_foods'
     quantityG: number
   }) => send<{ ok: boolean; entry: FoodLogEntry }>(`/api/food-log`, 'POST', body),
+  bodyLatest: () =>
+    get<{ ok: boolean; measurement: BodyMeasurement | null }>(`/api/body/latest`),
+  bodySeries: (days: number) =>
+    get<{ ok: boolean; series: BodyMeasurement[] }>(`/api/body/series?days=${days}`),
+}
+
+export type BodyMeasurement = {
+  date: string
+  measuredAt: string | null
+  source: string
+  weightKg: number | null
+  fatPct: number | null
+  muscleMassKg?: number | null
+  skeletalMusclePct?: number | null
+  boneMassKg?: number | null
+  waterPct: number | null
+  visceralFat: number | null
+  bmrKcal: number | null
 }
 
 export function localIsoDate(): string {

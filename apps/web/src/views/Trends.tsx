@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { SparkBars } from '../components/SparkBars'
 import { SparkLine } from '../components/SparkLine'
-import { api, type TrendDay } from '../lib/api'
+import { api, type BodyMeasurement, type TrendDay } from '../lib/api'
 
 const RANGES = [7, 30, 90] as const
 
@@ -10,6 +10,7 @@ const fmt = new Intl.NumberFormat('en-US')
 export function Trends() {
   const [days, setDays] = useState<7 | 30 | 90>(30)
   const [data, setData] = useState<TrendDay[] | null>(null)
+  const [body, setBody] = useState<BodyMeasurement[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -18,8 +19,11 @@ export function Trends() {
     setLoading(true)
     void (async () => {
       try {
-        const res = await api.trends(days)
-        if (!cancelled) setData(res.days)
+        const [trendsRes, bodyRes] = await Promise.all([api.trends(days), api.bodySeries(days)])
+        if (!cancelled) {
+          setData(trendsRes.days)
+          setBody(bodyRes.series)
+        }
       } catch (err) {
         if (!cancelled) setError((err as Error).message)
       } finally {
@@ -112,6 +116,35 @@ export function Trends() {
               height={90}
             />
           </Card>
+
+          {body && body.length > 0 && (
+            <>
+              {hasField(body, 'weightKg') && (
+                <Card
+                  title="weight"
+                  subtitle={summarizeRange(body, 'weightKg', (n) => `${n.toFixed(1)} kg`)}
+                >
+                  <SparkLine
+                    values={alignSeries(data, body, 'weightKg')}
+                    color="#60a5fa"
+                    height={90}
+                  />
+                </Card>
+              )}
+              {hasField(body, 'fatPct') && (
+                <Card
+                  title="body fat"
+                  subtitle={summarizeRange(body, 'fatPct', (n) => `${n.toFixed(1)} %`)}
+                >
+                  <SparkLine
+                    values={alignSeries(data, body, 'fatPct')}
+                    color="#f472b6"
+                    height={90}
+                  />
+                </Card>
+              )}
+            </>
+          )}
         </>
       )}
     </main>
@@ -191,4 +224,38 @@ const cardStyle: React.CSSProperties = {
 function signed(n: number): string {
   if (n === 0) return '0'
   return n > 0 ? `+${fmt.format(n)}` : `−${fmt.format(Math.abs(n))}`
+}
+
+type BodyKey = 'weightKg' | 'fatPct'
+
+function hasField(rows: BodyMeasurement[], key: BodyKey): boolean {
+  return rows.some((r) => r[key] != null)
+}
+
+function summarizeRange(
+  rows: BodyMeasurement[],
+  key: BodyKey,
+  fmtVal: (n: number) => string,
+): string {
+  const present = rows.filter((r): r is BodyMeasurement & Record<BodyKey, number> => r[key] != null)
+  if (present.length === 0) return 'no data'
+  const first = present[0]![key]
+  const last = present[present.length - 1]![key]
+  const delta = last - first
+  const sign = delta > 0 ? '+' : delta < 0 ? '−' : ''
+  return `${fmtVal(last)} (${sign}${fmtVal(Math.abs(delta)).replace(/[a-z%\s]+$/i, '').trim()})`
+}
+
+function alignSeries(
+  trend: TrendDay[],
+  body: BodyMeasurement[],
+  key: BodyKey,
+): Array<{ x: string; y: number | null }> {
+  const lastByDate = new Map<string, number>()
+  for (const m of body) {
+    const v = m[key]
+    if (v == null) continue
+    lastByDate.set(m.date, v)
+  }
+  return trend.map((d) => ({ x: d.date, y: lastByDate.get(d.date) ?? null }))
 }

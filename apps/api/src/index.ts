@@ -10,6 +10,8 @@ import { loadEnv } from './lib/env.js'
 import { googleOauth } from './oauth/google.js'
 import { ouraOauth } from './oauth/oura.js'
 import { stravaOauth } from './oauth/strava.js'
+import { withingsOauth } from './oauth/withings.js'
+import { bodyRoute } from './routes/body.js'
 import { foodLogRoute } from './routes/food-log.js'
 import { foodsRoute } from './routes/foods.js'
 import { health } from './routes/health.js'
@@ -18,6 +20,7 @@ import { todayRoute } from './routes/today.js'
 import { trendsRoute } from './routes/trends.js'
 import { workoutsRoute } from './routes/workouts.js'
 import { stravaWebhook } from './webhooks/strava.js'
+import { withingsWebhook } from './webhooks/withings.js'
 
 const env = loadEnv()
 const app = new Hono()
@@ -47,10 +50,13 @@ app.route('/api/foods', foodsRoute(env))
 app.route('/api/food-log', foodLogRoute(env))
 app.route('/api/workouts', workoutsRoute(env))
 app.route('/api/trends', trendsRoute(env))
+app.route('/api/body', bodyRoute(env))
 app.route('/api/oauth/oura', ouraOauth(env, (k) => process.env[k]))
 app.route('/api/oauth/strava', stravaOauth(env, (k) => process.env[k]))
 app.route('/api/oauth/google', googleOauth(env, (k) => process.env[k]))
+app.route('/api/oauth/withings', withingsOauth(env, (k) => process.env[k]))
 app.route('/api/webhooks/strava', stravaWebhook(env))
+app.route('/api/webhooks/withings', withingsWebhook(env))
 
 app.onError((err, c) => {
   Sentry.captureException(err)

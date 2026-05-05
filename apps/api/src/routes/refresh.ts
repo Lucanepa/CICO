@@ -10,6 +10,8 @@ import { syncOura } from '../sync/oura/index.js'
 import { StravaNotConnectedError } from '../sync/strava/client.js'
 import { syncStrava } from '../sync/strava/index.js'
 import { GoogleNotConnectedError, syncHealthSync } from '../sync/healthsync/index.js'
+import { WithingsNotConnectedError } from '../sync/withings/client.js'
+import { syncWithings } from '../sync/withings/index.js'
 import { dedupWorkoutsForWindow } from '../dedup/index.js'
 
 export function refreshRoute(env: Env) {
@@ -83,6 +85,25 @@ export function refreshRoute(env: Env) {
       }
     } else {
       sources.huawei = { status: 'not_configured' }
+    }
+
+    if (env.WITHINGS_CLIENT_ID && env.WITHINGS_CLIENT_SECRET) {
+      try {
+        sources.withings = await syncWithings(
+          database,
+          { clientId: env.WITHINGS_CLIENT_ID, clientSecret: env.WITHINGS_CLIENT_SECRET },
+          userId,
+        )
+      } catch (err) {
+        if (err instanceof WithingsNotConnectedError) {
+          sources.withings = { status: 'not_connected' }
+        } else {
+          Sentry.captureException(err)
+          sources.withings = { status: 'error', message: (err as Error).message }
+        }
+      }
+    } else {
+      sources.withings = { status: 'not_configured' }
     }
 
     const today = new Date()

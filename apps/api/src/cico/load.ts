@@ -1,4 +1,4 @@
-import { and, eq, sum } from 'drizzle-orm'
+import { and, desc, eq, gte, isNotNull, lte, sum } from 'drizzle-orm'
 import type { Database } from '@cico/db'
 import { schema } from '@cico/db'
 import { detectWatchOff } from '../dedup/watch-off.js'
@@ -52,7 +52,25 @@ export async function loadAndComputeDay(
     }
   }
 
-  const input: CicoInput = { dailyTotals, workouts, foodLog, watchOffSignals }
+  const recentBmrCutoff = new Date(date)
+  recentBmrCutoff.setUTCDate(recentBmrCutoff.getUTCDate() - 30)
+  const recentBmrCutoffStr = recentBmrCutoff.toISOString().slice(0, 10)
+  const bmrRow = await db
+    .select({ bmrKcal: schema.bodyMeasurements.bmrKcal })
+    .from(schema.bodyMeasurements)
+    .where(
+      and(
+        eq(schema.bodyMeasurements.userId, userId),
+        isNotNull(schema.bodyMeasurements.bmrKcal),
+        gte(schema.bodyMeasurements.date, recentBmrCutoffStr),
+        lte(schema.bodyMeasurements.date, date),
+      ),
+    )
+    .orderBy(desc(schema.bodyMeasurements.date), desc(schema.bodyMeasurements.measuredAt))
+    .limit(1)
+  const measuredBmrKcal = bmrRow[0]?.bmrKcal ?? null
+
+  const input: CicoInput = { dailyTotals, workouts, foodLog, watchOffSignals, measuredBmrKcal }
   return computeDailyBalance(date, input)
 }
 
