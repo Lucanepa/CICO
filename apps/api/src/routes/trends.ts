@@ -3,6 +3,7 @@ import { and, asc, eq, gte, lte } from 'drizzle-orm'
 import { schema } from '@cico/db'
 import { db } from '../lib/db.js'
 import type { Env } from '../lib/env.js'
+import { getRequestEmail } from '../lib/auth.js'
 import { loadAndComputeDay } from '../cico/load.js'
 import { getOrCreateDefaultUser } from '../lib/user.js'
 import type { ZoneMinutes } from '@cico/shared'
@@ -23,7 +24,7 @@ export function trendsRoute(env: Env) {
   app.get('/', async (c) => {
     const days = Math.min(180, Math.max(1, Number(c.req.query('days') ?? 30)))
     const database = db(env.DATABASE_URL)
-    const userId = await getOrCreateDefaultUser(database, env.DEFAULT_USER_EMAIL)
+    const userId = await getOrCreateDefaultUser(database, getRequestEmail(c, env))
 
     const dates = lastNDates(days)
     const startDate = dates[0]!

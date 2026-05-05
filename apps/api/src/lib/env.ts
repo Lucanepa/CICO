@@ -29,6 +29,9 @@ const envSchema = z.object({
 
   ALLOWED_ORIGINS: z.string().optional(),
   WEB_BASE_URL: z.string().url().optional(),
+
+  DIRECTUS_URL: z.string().url().optional(),
+  DIRECTUS_REQUIRED_ROLE: z.string().optional(),
 })
 
 export type Env = z.infer<typeof envSchema>

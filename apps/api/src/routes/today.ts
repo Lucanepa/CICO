@@ -1,4 +1,5 @@
 import { Hono } from 'hono'
+import { getRequestEmail } from '../lib/auth.js'
 import { db } from '../lib/db.js'
 import type { Env } from '../lib/env.js'
 import { getOrCreateDefaultUser } from '../lib/user.js'
@@ -13,7 +14,7 @@ export function todayRoute(env: Env) {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return c.json({ error: 'invalid_date' }, 400)
 
     const database = db(env.DATABASE_URL)
-    const userId = await getOrCreateDefaultUser(database, env.DEFAULT_USER_EMAIL)
+    const userId = await getOrCreateDefaultUser(database, getRequestEmail(c, env))
     const breakdown = await loadAndComputeDay(database, userId, date)
     return c.json({ ok: true, userId, breakdown })
   })

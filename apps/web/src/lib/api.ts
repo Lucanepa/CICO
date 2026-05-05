@@ -101,27 +101,48 @@ export type FoodLogEntry = {
   sourceLabel: string | null
 }
 
+import { clearSession, getValidAccessToken } from './auth'
+
 const API_BASE = (import.meta.env.VITE_API_BASE_URL ?? '').trim().replace(/\/$/, '')
 
 function url(path: string): string {
   return API_BASE ? `${API_BASE}${path}` : path
 }
 
-async function get<T>(path: string): Promise<T> {
-  const res = await fetch(url(path), { credentials: 'include' })
+async function authHeaders(): Promise<Record<string, string>> {
+  const token = await getValidAccessToken()
+  return token ? { authorization: `Bearer ${token}` } : {}
+}
+
+async function handleResponse<T>(path: string, res: Response): Promise<T> {
+  if (res.status === 401) {
+    clearSession()
+    if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/login')) {
+      window.location.assign('/login')
+    }
+  }
   if (!res.ok) throw new Error(`${path} → ${res.status}`)
   return (await res.json()) as T
 }
 
+async function get<T>(path: string): Promise<T> {
+  const res = await fetch(url(path), {
+    credentials: 'include',
+    headers: await authHeaders(),
+  })
+  return handleResponse<T>(path, res)
+}
+
 async function send<T>(path: string, method: string, body?: unknown): Promise<T> {
+  const headers: Record<string, string> = { ...(await authHeaders()) }
+  if (body) headers['content-type'] = 'application/json'
   const res = await fetch(url(path), {
     method,
     credentials: 'include',
-    headers: body ? { 'content-type': 'application/json' } : {},
+    headers,
     body: body ? JSON.stringify(body) : undefined,
   })
-  if (!res.ok) throw new Error(`${path} → ${res.status}`)
-  return (await res.json()) as T
+  return handleResponse<T>(path, res)
 }
 
 export const api = {

@@ -5,6 +5,7 @@ import { zValidator } from '@hono/zod-validator'
 import { schema } from '@cico/db'
 import { db } from '../lib/db.js'
 import type { Env } from '../lib/env.js'
+import { getRequestEmail } from '../lib/auth.js'
 import { loadHrSettings } from '../lib/hr-settings.js'
 import { getOrCreateDefaultUser } from '../lib/user.js'
 import { defaultMaxHr } from '@cico/shared'
@@ -16,7 +17,7 @@ export function workoutsRoute(env: Env) {
     const date = c.req.query('date')
     if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return c.json({ error: 'invalid_date' }, 400)
     const database = db(env.DATABASE_URL)
-    const userId = await getOrCreateDefaultUser(database, env.DEFAULT_USER_EMAIL)
+    const userId = await getOrCreateDefaultUser(database, getRequestEmail(c, env))
 
     const rows = await database
       .select({
@@ -46,7 +47,7 @@ export function workoutsRoute(env: Env) {
   app.post('/pin-primary', zValidator('json', pinSchema), async (c) => {
     const { id } = c.req.valid('json')
     const database = db(env.DATABASE_URL)
-    const userId = await getOrCreateDefaultUser(database, env.DEFAULT_USER_EMAIL)
+    const userId = await getOrCreateDefaultUser(database, getRequestEmail(c, env))
 
     const target = await database
       .select({ id: schema.workouts.id, duplicateOf: schema.workouts.duplicateOf })
@@ -79,7 +80,7 @@ export function workoutsRoute(env: Env) {
   app.get('/:id', async (c) => {
     const id = c.req.param('id')
     const database = db(env.DATABASE_URL)
-    const userId = await getOrCreateDefaultUser(database, env.DEFAULT_USER_EMAIL)
+    const userId = await getOrCreateDefaultUser(database, getRequestEmail(c, env))
 
     const rows = await database
       .select()

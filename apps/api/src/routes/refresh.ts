@@ -2,6 +2,7 @@ import { Hono } from 'hono'
 import * as Sentry from '@sentry/node'
 import { db } from '../lib/db.js'
 import type { Env } from '../lib/env.js'
+import { getRequestEmail } from '../lib/auth.js'
 import { loadHrSettings } from '../lib/hr-settings.js'
 import { getOrCreateDefaultUser } from '../lib/user.js'
 import { OuraNotConnectedError } from '../sync/oura/client.js'
@@ -16,7 +17,7 @@ export function refreshRoute(env: Env) {
 
   app.get('/', async (c) => {
     const database = db(env.DATABASE_URL)
-    const userId = await getOrCreateDefaultUser(database, env.DEFAULT_USER_EMAIL)
+    const userId = await getOrCreateDefaultUser(database, getRequestEmail(c, env))
     const hr = await loadHrSettings(database, userId)
 
     const sources: Record<string, unknown> = {}

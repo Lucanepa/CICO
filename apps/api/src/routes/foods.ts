@@ -4,6 +4,7 @@ import { and, eq } from 'drizzle-orm'
 import { z } from 'zod'
 import { db } from '../lib/db.js'
 import type { Env } from '../lib/env.js'
+import { getRequestEmail } from '../lib/auth.js'
 import { getOrCreateDefaultUser } from '../lib/user.js'
 import { schema } from '@cico/db'
 import { offByBarcode } from '../foods/off.js'
@@ -19,7 +20,7 @@ export function foodsRoute(env: Env) {
   app.get('/search', async (c) => {
     const q = c.req.query('q') ?? ''
     const database = db(env.DATABASE_URL)
-    const userId = await getOrCreateDefaultUser(database, env.DEFAULT_USER_EMAIL)
+    const userId = await getOrCreateDefaultUser(database, getRequestEmail(c, env))
 
     const local = await searchFoods(database, userId, q)
     if (local.length >= 10 || q.length < 3) {
@@ -74,7 +75,7 @@ export function foodsRoute(env: Env) {
   app.post('/custom', zValidator('json', customFoodSchema), async (c) => {
     const body = c.req.valid('json')
     const database = db(env.DATABASE_URL)
-    const userId = await getOrCreateDefaultUser(database, env.DEFAULT_USER_EMAIL)
+    const userId = await getOrCreateDefaultUser(database, getRequestEmail(c, env))
     const inserted = await database
       .insert(schema.customFoods)
       .values({
@@ -94,7 +95,7 @@ export function foodsRoute(env: Env) {
   app.delete('/custom/:id', async (c) => {
     const id = c.req.param('id')
     const database = db(env.DATABASE_URL)
-    const userId = await getOrCreateDefaultUser(database, env.DEFAULT_USER_EMAIL)
+    const userId = await getOrCreateDefaultUser(database, getRequestEmail(c, env))
     await database
       .delete(schema.customFoods)
       .where(and(eq(schema.customFoods.id, id), eq(schema.customFoods.userId, userId)))
@@ -113,7 +114,7 @@ export function foodsRoute(env: Env) {
     }
     const body = c.req.valid('json')
     const database = db(env.DATABASE_URL)
-    const userId = await getOrCreateDefaultUser(database, env.DEFAULT_USER_EMAIL)
+    const userId = await getOrCreateDefaultUser(database, getRequestEmail(c, env))
 
     let result
     try {
@@ -161,7 +162,7 @@ export function foodsRoute(env: Env) {
         )
       }
       const database = db(env.DATABASE_URL)
-      const userId = await getOrCreateDefaultUser(database, env.DEFAULT_USER_EMAIL)
+      const userId = await getOrCreateDefaultUser(database, getRequestEmail(c, env))
       const inserted = await database
         .insert(schema.customFoods)
         .values({

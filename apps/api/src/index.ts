@@ -5,6 +5,7 @@ import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { logger } from 'hono/logger'
 import { startCron } from './cron/prewarm.js'
+import { requireDirectusAuth } from './lib/auth.js'
 import { loadEnv } from './lib/env.js'
 import { googleOauth } from './oauth/google.js'
 import { ouraOauth } from './oauth/oura.js'
@@ -36,6 +37,8 @@ if (env.ALLOWED_ORIGINS) {
     }),
   )
 }
+
+app.use('/api/*', requireDirectusAuth(env))
 
 app.route('/api/health', health)
 app.route('/api/refresh', refreshRoute(env))

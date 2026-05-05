@@ -4,6 +4,7 @@ import { and, eq, asc } from 'drizzle-orm'
 import { z } from 'zod'
 import { db } from '../lib/db.js'
 import type { Env } from '../lib/env.js'
+import { getRequestEmail } from '../lib/auth.js'
 import { getOrCreateDefaultUser } from '../lib/user.js'
 import { schema } from '@cico/db'
 
@@ -15,7 +16,7 @@ export function foodLogRoute(env: Env) {
     if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return c.json({ error: 'invalid_date' }, 400)
 
     const database = db(env.DATABASE_URL)
-    const userId = await getOrCreateDefaultUser(database, env.DEFAULT_USER_EMAIL)
+    const userId = await getOrCreateDefaultUser(database, getRequestEmail(c, env))
 
     const rows = await database
       .select()
@@ -36,7 +37,7 @@ export function foodLogRoute(env: Env) {
   app.post('/', zValidator('json', newEntrySchema), async (c) => {
     const body = c.req.valid('json')
     const database = db(env.DATABASE_URL)
-    const userId = await getOrCreateDefaultUser(database, env.DEFAULT_USER_EMAIL)
+    const userId = await getOrCreateDefaultUser(database, getRequestEmail(c, env))
 
     const macros = await loadMacros(database, body.foodId, body.foodTable)
     if (!macros) return c.json({ error: 'food_not_found' }, 404)
@@ -64,7 +65,7 @@ export function foodLogRoute(env: Env) {
   app.delete('/:id', async (c) => {
     const id = c.req.param('id')
     const database = db(env.DATABASE_URL)
-    const userId = await getOrCreateDefaultUser(database, env.DEFAULT_USER_EMAIL)
+    const userId = await getOrCreateDefaultUser(database, getRequestEmail(c, env))
     await database
       .delete(schema.foodLog)
       .where(and(eq(schema.foodLog.id, id), eq(schema.foodLog.userId, userId)))
