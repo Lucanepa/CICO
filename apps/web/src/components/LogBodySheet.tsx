@@ -1,4 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { api, type BodyMeasurement } from '../lib/api'
 import { Sheet } from './Sheet'
 
@@ -75,7 +78,7 @@ export function LogBodySheet({ open, onClose, onSaved, prefill }: Props) {
       body[key] = n
     }
     if (Object.keys(body).length === 0) {
-      setError('enter at least one value')
+      setError('Enter at least one value')
       return
     }
     if (note.trim()) body.note = note.trim()
@@ -102,109 +105,47 @@ export function LogBodySheet({ open, onClose, onSaved, prefill }: Props) {
       }}
       title="Log body"
     >
-      <form onSubmit={onSubmit}>
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: 10,
-          }}
-        >
+      <form onSubmit={onSubmit} className="space-y-4">
+        <div className="grid grid-cols-2 gap-3">
           {FIELDS.map((f) => (
-            <Field
-              key={f.key}
-              label={f.label}
-              suffix={f.suffix}
-              step={f.step}
-              value={values[f.key] ?? ''}
-              onChange={(v) => setValues((s) => ({ ...s, [f.key]: v }))}
-            />
+            <div key={f.key} className="space-y-1.5">
+              <Label htmlFor={f.key}>
+                {f.label}
+                {f.suffix ? ` (${f.suffix})` : ''}
+              </Label>
+              <Input
+                id={f.key}
+                type="number"
+                inputMode="decimal"
+                step={f.step}
+                value={values[f.key] ?? ''}
+                onChange={(e) => setValues((s) => ({ ...s, [f.key]: e.target.value }))}
+              />
+            </div>
           ))}
         </div>
 
-        <label style={{ display: 'block', marginTop: 14 }}>
-          <span style={labelStyle}>Note (optional)</span>
-          <input
+        <div className="space-y-1.5">
+          <Label htmlFor="note">Note (optional)</Label>
+          <Input
+            id="note"
             type="text"
             value={note}
             onChange={(e) => setNote(e.target.value)}
             maxLength={200}
-            style={inputStyle}
           />
-        </label>
+        </div>
 
         {error && (
-          <p style={{ marginTop: 12, color: 'var(--danger)', fontSize: 12 }}>{error}</p>
+          <p className="text-sm text-destructive" role="alert">
+            {error}
+          </p>
         )}
 
-        <button
-          type="submit"
-          disabled={submitting}
-          style={{
-            marginTop: 16,
-            width: '100%',
-            padding: '12px 0',
-            background: 'var(--accent)',
-            color: '#0a0a0a',
-            border: 'none',
-            borderRadius: 8,
-            fontWeight: 600,
-            opacity: submitting ? 0.6 : 1,
-          }}
-        >
+        <Button type="submit" disabled={submitting} className="w-full" size="lg">
           {submitting ? 'Saving…' : 'Save'}
-        </button>
+        </Button>
       </form>
     </Sheet>
   )
-}
-
-function Field({
-  label,
-  suffix,
-  step,
-  value,
-  onChange,
-}: {
-  label: string
-  suffix: string
-  step: string
-  value: string
-  onChange: (v: string) => void
-}) {
-  return (
-    <label style={{ display: 'block' }}>
-      <span style={labelStyle}>
-        {label}
-        {suffix ? ` (${suffix})` : ''}
-      </span>
-      <input
-        type="number"
-        inputMode="decimal"
-        step={step}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        style={inputStyle}
-      />
-    </label>
-  )
-}
-
-const labelStyle: React.CSSProperties = {
-  display: 'block',
-  fontSize: 11,
-  color: 'var(--muted)',
-  textTransform: 'uppercase',
-  letterSpacing: 0.5,
-  marginBottom: 4,
-}
-
-const inputStyle: React.CSSProperties = {
-  width: '100%',
-  padding: '10px 12px',
-  background: 'var(--surface-2)',
-  border: '1px solid var(--border)',
-  borderRadius: 8,
-  color: 'var(--text)',
-  fontSize: 16,
 }

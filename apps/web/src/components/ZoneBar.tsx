@@ -46,7 +46,7 @@ export function ZoneBar({ zones, height = 16 }: { zones: ZoneMinutes; height?: n
           display: 'flex',
           justifyContent: 'space-between',
           fontSize: 10,
-          color: 'var(--muted)',
+          color: 'var(--muted-foreground)',
         }}
       >
         {ORDER.map((k) => (

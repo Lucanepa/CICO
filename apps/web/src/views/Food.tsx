@@ -40,29 +40,29 @@ export function Food() {
     <main style={{ padding: '24px 20px 96px', maxWidth: 480, margin: '0 auto' }}>
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <div style={{ fontSize: 12, color: 'var(--muted)' }}>{prettyDate(date)}</div>
+          <div style={{ fontSize: 12, color: 'var(--muted-foreground)' }}>{prettyDate(date)}</div>
           <h1 style={{ margin: 0, fontSize: 28 }}>Food</h1>
         </div>
         <button
           onClick={() => setAdding(true)}
-          style={{ background: 'var(--accent)', color: '#0a0a0a', borderColor: 'var(--accent)' }}
+          style={{ background: 'var(--primary)', color: '#0a0a0a', borderColor: 'var(--primary)' }}
         >
           + add
         </button>
       </header>
 
       <section style={{ ...cardStyle, marginTop: 20 }}>
-        <div style={{ fontSize: 12, color: 'var(--muted)', textTransform: 'uppercase' }}>
+        <div style={{ fontSize: 12, color: 'var(--muted-foreground)', textTransform: 'uppercase' }}>
           today's intake
         </div>
         <div style={{ fontSize: 26, fontWeight: 700 }}>{fmt.format(totals.kcal)} kcal</div>
-        <div style={{ fontSize: 12, color: 'var(--muted)' }}>
+        <div style={{ fontSize: 12, color: 'var(--muted-foreground)' }}>
           {totals.p.toFixed(0)}P · {totals.c.toFixed(0)}C · {totals.f.toFixed(0)}F
         </div>
       </section>
 
       {entries.length === 0 ? (
-        <div style={{ marginTop: 24, color: 'var(--muted)', fontSize: 13 }}>
+        <div style={{ marginTop: 24, color: 'var(--muted-foreground)', fontSize: 13 }}>
           nothing logged yet — tap "+ add" to start.
         </div>
       ) : (
@@ -104,7 +104,7 @@ function Row({ entry, onDelete }: { entry: FoodLogEntry; onDelete: () => Promise
       >
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           <span style={{ fontSize: 14 }}>{entry.sourceLabel ?? '(unknown food)'}</span>
-          <span style={{ fontSize: 11, color: 'var(--muted)' }}>
+          <span style={{ fontSize: 11, color: 'var(--muted-foreground)' }}>
             {entry.quantityG}g
             {entry.time ? ` · ${entry.time.slice(0, 5)}` : ''}
           </span>

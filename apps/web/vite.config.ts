@@ -1,3 +1,5 @@
+import path from 'node:path'
+import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
@@ -5,8 +7,10 @@ import { VitePWA } from 'vite-plugin-pwa'
 export default defineConfig({
   plugins: [
     react(),
+    tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
+      includeAssets: ['icon.svg', 'icon-192.png', 'icon-512.png', 'icon-1024.png'],
       manifest: {
         name: 'CICO',
         short_name: 'CICO',
@@ -15,7 +19,12 @@ export default defineConfig({
         background_color: '#0a0a0a',
         display: 'standalone',
         start_url: '/',
-        icons: [],
+        icons: [
+          { src: '/icon-192.png', sizes: '192x192', type: 'image/png' },
+          { src: '/icon-512.png', sizes: '512x512', type: 'image/png' },
+          { src: '/icon-1024.png', sizes: '1024x1024', type: 'image/png', purpose: 'any maskable' },
+          { src: '/icon.svg', sizes: 'any', type: 'image/svg+xml' },
+        ],
       },
       workbox: {
         navigateFallback: '/index.html',
@@ -44,6 +53,11 @@ export default defineConfig({
       },
     }),
   ],
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+    },
+  },
   server: {
     port: 5173,
     proxy: {

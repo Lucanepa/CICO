@@ -26,7 +26,7 @@ export function HrCurve({ samples, maxHr, startTime, endTime, height = 220 }: Pr
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          color: 'var(--muted)',
+          color: 'var(--muted-foreground)',
           fontSize: 13,
           background: 'var(--surface)',
           border: '1px solid var(--border)',
@@ -105,7 +105,7 @@ export function HrCurve({ samples, maxHr, startTime, endTime, height = 220 }: Pr
             strokeDasharray="2 4"
             strokeWidth={0.5}
           />
-          <text x={4} y={yOf(bpm) + 3} fill="var(--muted)" fontSize="9">
+          <text x={4} y={yOf(bpm) + 3} fill="var(--muted-foreground)" fontSize="9">
             {bpm}
           </text>
         </g>
@@ -115,7 +115,7 @@ export function HrCurve({ samples, maxHr, startTime, endTime, height = 220 }: Pr
           key={ts}
           x={xOf(ts)}
           y={H - 6}
-          fill="var(--muted)"
+          fill="var(--muted-foreground)"
           fontSize="9"
           textAnchor="middle"
         >

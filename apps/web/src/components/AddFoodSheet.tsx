@@ -79,9 +79,9 @@ function ModeTabs({ mode, onChange }: { mode: Mode; onChange: (m: Mode) => void 
           style={{
             padding: '8px 0',
             fontSize: 12,
-            background: mode === m ? 'var(--accent)' : 'var(--surface-2)',
+            background: mode === m ? 'var(--primary)' : 'var(--surface-2)',
             color: mode === m ? '#0a0a0a' : 'var(--text)',
-            borderColor: mode === m ? 'var(--accent)' : 'var(--border)',
+            borderColor: mode === m ? 'var(--primary)' : 'var(--border)',
           }}
         >
           {TAB_LABELS[m]}
@@ -121,12 +121,12 @@ function SearchPane({ onPick }: { onPick: (hit: SearchHit) => void }) {
         style={inputStyle}
       />
       <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 6 }}>
-        {busy && <span style={{ color: 'var(--muted)', fontSize: 12 }}>searching…</span>}
+        {busy && <span style={{ color: 'var(--muted-foreground)', fontSize: 12 }}>searching…</span>}
         {hits.map((h) => (
           <HitRow key={`${h.table}:${h.id}`} hit={h} onPick={() => onPick(h)} />
         ))}
         {!busy && q.length >= 2 && hits.length === 0 && (
-          <span style={{ color: 'var(--muted)', fontSize: 12 }}>no results</span>
+          <span style={{ color: 'var(--muted-foreground)', fontSize: 12 }}>no results</span>
         )}
       </div>
     </div>
@@ -203,7 +203,7 @@ function PhotoPane({ onPick }: { onPick: (hit: SearchHit) => void }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-      <p style={{ fontSize: 12, color: 'var(--muted)', margin: 0 }}>
+      <p style={{ fontSize: 12, color: 'var(--muted-foreground)', margin: 0 }}>
         snap a nutrition label. macros are extracted via Claude.
       </p>
       <input
@@ -215,7 +215,7 @@ function PhotoPane({ onPick }: { onPick: (hit: SearchHit) => void }) {
           if (file) void handleFile(file)
         }}
       />
-      {busy && <span style={{ color: 'var(--muted)', fontSize: 12 }}>extracting…</span>}
+      {busy && <span style={{ color: 'var(--muted-foreground)', fontSize: 12 }}>extracting…</span>}
       {warnings.length > 0 && (
         <ul style={{ color: 'var(--warn)', fontSize: 12, marginTop: 0 }}>
           {warnings.map((w, i) => (
@@ -282,7 +282,7 @@ function HitRow({ hit, onPick }: { hit: SearchHit; onPick: () => void }) {
     >
       <div style={{ display: 'flex', flexDirection: 'column' }}>
         <span style={{ fontSize: 14 }}>{hit.name}</span>
-        <span style={{ fontSize: 11, color: 'var(--muted)' }}>
+        <span style={{ fontSize: 11, color: 'var(--muted-foreground)' }}>
           {hit.source}
           {hit.barcode ? ` · ${hit.barcode}` : ''}
         </span>
@@ -326,12 +326,12 @@ function QuantityPane({
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       <div style={{ fontSize: 14, fontWeight: 600 }}>{hit.name}</div>
-      <div style={{ fontSize: 12, color: 'var(--muted)' }}>
+      <div style={{ fontSize: 12, color: 'var(--muted-foreground)' }}>
         {hit.kcal100g.toFixed(0)} kcal · {hit.p100g ?? '—'} P · {hit.c100g ?? '—'} C ·{' '}
         {hit.f100g ?? '—'} F (per 100g)
       </div>
       <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-        <span style={{ fontSize: 12, color: 'var(--muted)' }}>grams</span>
+        <span style={{ fontSize: 12, color: 'var(--muted-foreground)' }}>grams</span>
         <input
           type="number"
           min={1}
@@ -349,7 +349,7 @@ function QuantityPane({
         <button
           onClick={save}
           disabled={busy}
-          style={{ flex: 2, background: 'var(--accent)', color: '#0a0a0a', borderColor: 'var(--accent)' }}
+          style={{ flex: 2, background: 'var(--primary)', color: '#0a0a0a', borderColor: 'var(--primary)' }}
         >
           {busy ? 'saving…' : 'add to log'}
         </button>

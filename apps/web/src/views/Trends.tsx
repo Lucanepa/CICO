@@ -52,7 +52,7 @@ export function Trends() {
   return (
     <main style={{ padding: '24px 20px 96px', maxWidth: 480, margin: '0 auto' }}>
       <h1 style={{ margin: 0, fontSize: 28 }}>Trends</h1>
-      <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 16 }}>
+      <div style={{ fontSize: 12, color: 'var(--muted-foreground)', marginBottom: 16 }}>
         last {days} days
       </div>
 
@@ -70,9 +70,9 @@ export function Trends() {
             onClick={() => setDays(n)}
             style={{
               padding: '8px 0',
-              background: days === n ? 'var(--accent)' : 'var(--surface-2)',
+              background: days === n ? 'var(--primary)' : 'var(--surface-2)',
               color: days === n ? '#0a0a0a' : 'var(--text)',
-              borderColor: days === n ? 'var(--accent)' : 'var(--border)',
+              borderColor: days === n ? 'var(--primary)' : 'var(--border)',
             }}
           >
             {n}d
@@ -80,7 +80,7 @@ export function Trends() {
         ))}
       </div>
 
-      {loading && !data && <div style={{ color: 'var(--muted)' }}>loading…</div>}
+      {loading && !data && <div style={{ color: 'var(--muted-foreground)' }}>loading…</div>}
 
       {data && (
         <>
@@ -166,14 +166,14 @@ function Card({
         <span
           style={{
             fontSize: 12,
-            color: 'var(--muted)',
+            color: 'var(--muted-foreground)',
             textTransform: 'uppercase',
             letterSpacing: 0.5,
           }}
         >
           {title}
         </span>
-        {subtitle && <span style={{ fontSize: 12, color: 'var(--muted)' }}>{subtitle}</span>}
+        {subtitle && <span style={{ fontSize: 12, color: 'var(--muted-foreground)' }}>{subtitle}</span>}
       </div>
       {children}
     </section>
@@ -191,7 +191,7 @@ function Legend({ items }: { items: Array<{ label: string; color: string }> }) {
             alignItems: 'center',
             gap: 4,
             fontSize: 10,
-            color: 'var(--muted)',
+            color: 'var(--muted-foreground)',
           }}
         >
           <span

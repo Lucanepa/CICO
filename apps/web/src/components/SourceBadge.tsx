@@ -7,7 +7,7 @@ const COLORS: Record<string, { bg: string; fg: string }> = {
 }
 
 export function SourceBadge({ source }: { source: string }) {
-  const c = COLORS[source] ?? { bg: 'var(--surface-2)', fg: 'var(--muted)' }
+  const c = COLORS[source] ?? { bg: 'var(--surface-2)', fg: 'var(--muted-foreground)' }
   return (
     <span
       style={{

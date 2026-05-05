@@ -16,7 +16,7 @@ export function SparkLine({ values, color, yMin, yMax, height = 80 }: Props) {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          color: 'var(--muted)',
+          color: 'var(--muted-foreground)',
           fontSize: 11,
         }}
       >
@@ -52,10 +52,10 @@ export function SparkLine({ values, color, yMin, yMax, height = 80 }: Props) {
   return (
     <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={H}>
       <path d={path} fill="none" stroke={color} strokeWidth={1.5} />
-      <text x={4} y={H - 2} fill="var(--muted)" fontSize="9">
+      <text x={4} y={H - 2} fill="var(--muted-foreground)" fontSize="9">
         {values[0]!.x.slice(5)}
       </text>
-      <text x={W - 4} y={H - 2} fill="var(--muted)" fontSize="9" textAnchor="end">
+      <text x={W - 4} y={H - 2} fill="var(--muted-foreground)" fontSize="9" textAnchor="end">
         {values[values.length - 1]!.x.slice(5)}
       </text>
     </svg>

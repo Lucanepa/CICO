@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#101418"/>
+      <stop offset="1" stop-color="#06080a"/>
+    </linearGradient>
+    <linearGradient id="markGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#5eead4"/>
+      <stop offset="1" stop-color="#34d399"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect x="0" y="0" width="1024" height="1024" rx="224" ry="224" fill="url(#bgGrad)"/>
+
+  <!-- Subtle inner ring (ledger) -->
+  <circle cx="512" cy="512" r="324" fill="none" stroke="#1f2937" stroke-width="6" opacity="0.6"/>
+
+  <!-- Outer ring left arc (Calories IN — opens upward, fills) -->
+  <path
+    d="M 512 188
+       A 324 324 0 0 0 188 512"
+    fill="none"
+    stroke="url(#markGrad)"
+    stroke-width="80"
+    stroke-linecap="round"/>
+
+  <!-- Outer ring right arc (Calories OUT — opens downward) -->
+  <path
+    d="M 836 512
+       A 324 324 0 0 0 512 836"
+    fill="none"
+    stroke="url(#markGrad)"
+    stroke-width="80"
+    stroke-linecap="round"/>
+
+  <!-- Balance crossbar (horizontal axis, accent) -->
+  <line x1="296" y1="512" x2="728" y2="512"
+        stroke="#34d399" stroke-width="14" stroke-linecap="round" opacity="0.95"/>
+
+  <!-- Pivot dot -->
+  <circle cx="512" cy="512" r="22" fill="#0a0a0a" stroke="#34d399" stroke-width="8"/>
+</svg>

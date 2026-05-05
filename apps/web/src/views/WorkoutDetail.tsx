@@ -50,7 +50,7 @@ export function WorkoutDetail() {
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
           <h1 style={{ margin: 0, fontSize: 24 }}>{w.type}</h1>
-          <div style={{ fontSize: 12, color: 'var(--muted)' }}>
+          <div style={{ fontSize: 12, color: 'var(--muted-foreground)' }}>
             {timeRange(w.startTime, w.endTime)} · {Math.round(w.durationMin)} min
           </div>
         </div>
@@ -97,7 +97,7 @@ export function WorkoutDetail() {
                   <div style={{ fontSize: 13 }}>{d.type}</div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     {d.calories != null && (
-                      <span style={{ fontSize: 12, color: 'var(--muted)' }}>
+                      <span style={{ fontSize: 12, color: 'var(--muted-foreground)' }}>
                         {fmt.format(d.calories)} kcal
                       </span>
                     )}
@@ -134,7 +134,7 @@ const cardStyle: React.CSSProperties = {
 
 const sectionLabel: React.CSSProperties = {
   fontSize: 13,
-  color: 'var(--muted)',
+  color: 'var(--muted-foreground)',
   textTransform: 'uppercase',
   letterSpacing: 0.5,
   marginTop: 24,
@@ -155,7 +155,7 @@ function Stat({
       <span
         style={{
           fontSize: 11,
-          color: 'var(--muted)',
+          color: 'var(--muted-foreground)',
           textTransform: 'uppercase',
           letterSpacing: 0.5,
         }}
@@ -164,7 +164,7 @@ function Stat({
       </span>
       <span style={{ fontSize: 18, fontWeight: 600 }}>
         {typeof value === 'number' ? fmt.format(value) : value}{' '}
-        {suffix && <span style={{ fontSize: 10, color: 'var(--muted)' }}>{suffix}</span>}
+        {suffix && <span style={{ fontSize: 10, color: 'var(--muted-foreground)' }}>{suffix}</span>}
       </span>
     </div>
   )

@@ -49,7 +49,7 @@ export function InstallBanner() {
     >
       <div style={{ flex: 1, fontSize: 13 }}>
         <div style={{ fontWeight: 600 }}>Install CICO</div>
-        <div style={{ color: 'var(--muted)', fontSize: 11 }}>
+        <div style={{ color: 'var(--muted-foreground)', fontSize: 11 }}>
           home-screen access, works offline
         </div>
       </div>
@@ -71,9 +71,9 @@ export function InstallBanner() {
         style={{
           padding: '6px 12px',
           fontSize: 12,
-          background: 'var(--accent)',
+          background: 'var(--primary)',
           color: '#0a0a0a',
-          borderColor: 'var(--accent)',
+          borderColor: 'var(--primary)',
         }}
       >
         install

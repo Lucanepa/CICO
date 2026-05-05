@@ -34,26 +34,26 @@ export function Activity() {
   return (
     <main style={{ padding: '24px 20px 96px', maxWidth: 480, margin: '0 auto' }}>
       <h1 style={{ margin: 0, fontSize: 28 }}>Activity</h1>
-      <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 24 }}>
+      <div style={{ fontSize: 12, color: 'var(--muted-foreground)', marginBottom: 24 }}>
         {prettyDate(date)}
       </div>
 
       <section style={cardStyle}>
-        <div style={{ fontSize: 12, color: 'var(--muted)', textTransform: 'uppercase' }}>
+        <div style={{ fontSize: 12, color: 'var(--muted-foreground)', textTransform: 'uppercase' }}>
           time in zone (primary workouts)
         </div>
         {dayZones ? (
           <ZoneBar zones={dayZones} height={20} />
         ) : (
-          <div style={{ color: 'var(--muted)', fontSize: 13 }}>no HR data today</div>
+          <div style={{ color: 'var(--muted-foreground)', fontSize: 13 }}>no HR data today</div>
         )}
       </section>
 
-      <h2 style={{ fontSize: 14, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 24 }}>
+      <h2 style={{ fontSize: 14, color: 'var(--muted-foreground)', textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 24 }}>
         workouts
       </h2>
       {primary.length === 0 && (
-        <div style={{ color: 'var(--muted)', fontSize: 13 }}>no workouts logged today</div>
+        <div style={{ color: 'var(--muted-foreground)', fontSize: 13 }}>no workouts logged today</div>
       )}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {primary.map((w) => (
@@ -65,7 +65,7 @@ export function Activity() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
               <div style={{ display: 'flex', flexDirection: 'column' }}>
                 <span style={{ fontSize: 16, fontWeight: 600 }}>{w.type}</span>
-                <span style={{ fontSize: 12, color: 'var(--muted)' }}>
+                <span style={{ fontSize: 12, color: 'var(--muted-foreground)' }}>
                   {timeRange(w.startTime, w.endTime)} · {Math.round(w.durationMin)} min
                 </span>
               </div>
@@ -83,7 +83,7 @@ export function Activity() {
 
       {duplicates.length > 0 && (
         <details style={{ marginTop: 16 }}>
-          <summary style={{ color: 'var(--muted)', fontSize: 13, cursor: 'pointer' }}>
+          <summary style={{ color: 'var(--muted-foreground)', fontSize: 13, cursor: 'pointer' }}>
             {duplicates.length} duplicate{duplicates.length === 1 ? '' : 's'}
           </summary>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
@@ -115,7 +115,7 @@ function DuplicateRow({ w, onPin }: { w: Workout; onPin: () => Promise<void> }) 
         <div style={{ fontSize: 13 }}>{w.type}</div>
         <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
           {w.calories != null && (
-            <span style={{ fontSize: 12, color: 'var(--muted)' }}>{fmt.format(w.calories)} kcal</span>
+            <span style={{ fontSize: 12, color: 'var(--muted-foreground)' }}>{fmt.format(w.calories)} kcal</span>
           )}
           <SourceBadge source={w.source} />
           <button

@@ -27,10 +27,10 @@ export function SparkBars({ values, positiveColor, negativeColor, height = 80 }:
         const fill = v.y >= 0 ? positiveColor : (negativeColor ?? positiveColor)
         return <rect key={v.x} x={i * colW + 1} y={y} width={barW} height={h} fill={fill} rx={1} />
       })}
-      <text x={4} y={H - 2} fill="var(--muted)" fontSize="9">
+      <text x={4} y={H - 2} fill="var(--muted-foreground)" fontSize="9">
         {values[0]!.x.slice(5)}
       </text>
-      <text x={W - 4} y={H - 2} fill="var(--muted)" fontSize="9" textAnchor="end">
+      <text x={W - 4} y={H - 2} fill="var(--muted-foreground)" fontSize="9" textAnchor="end">
         {values[values.length - 1]!.x.slice(5)}
       </text>
     </svg>

@@ -1,8 +1,13 @@
 import { useCallback, useEffect, useState } from 'react'
-import { BodyCard } from '../components/BodyCard'
-import { Donut } from '../components/Donut'
-import { EnergyBalanceChip } from '../components/EnergyBalanceChip'
-import { FitnessCard } from '../components/FitnessCard'
+import { RefreshCw } from 'lucide-react'
+import { BodyCard } from '@/components/BodyCard'
+import { Donut } from '@/components/Donut'
+import { EnergyBalanceChip } from '@/components/EnergyBalanceChip'
+import { FitnessCard } from '@/components/FitnessCard'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
+import { cn } from '@/lib/utils'
 import { api, localIsoDate, type CicoBreakdown } from '../lib/api'
 
 const fmt = new Intl.NumberFormat('en-US')
@@ -41,73 +46,83 @@ export function Today() {
     }
   }
 
-  if (loading) return <div style={{ padding: 24 }}>loading…</div>
-  if (error) return <div style={{ padding: 24, color: 'var(--danger)' }}>error: {error}</div>
+  if (loading)
+    return (
+      <main className="mx-auto max-w-md px-5 pt-10 text-sm text-muted-foreground">
+        Loading…
+      </main>
+    )
+  if (error)
+    return (
+      <main className="mx-auto max-w-md px-5 pt-10 text-sm text-destructive">
+        Error: {error}
+      </main>
+    )
   if (!breakdown) return null
 
   const net = breakdown.net
   const netLabel = net === 0 ? 'even' : net > 0 ? 'surplus' : 'deficit'
-  const netColor = net === 0 ? 'var(--text)' : net > 0 ? 'var(--warn)' : 'var(--accent)'
+  const netClass =
+    net === 0
+      ? 'text-foreground'
+      : net > 0
+        ? 'text-warning'
+        : 'text-primary'
 
   return (
-    <main style={{ padding: '24px 20px 96px', maxWidth: 480, margin: '0 auto' }}>
-      <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+    <main className="mx-auto max-w-md space-y-5 px-5 pb-28 pt-6">
+      <header className="flex items-center justify-between">
         <div>
-          <div style={{ fontSize: 12, color: 'var(--muted)' }}>{prettyDate(breakdown.date)}</div>
-          <h1 style={{ margin: 0, fontSize: 28 }}>Today</h1>
+          <p className="text-xs uppercase tracking-wide text-muted-foreground">
+            {prettyDate(breakdown.date)}
+          </p>
+          <h1 className="mt-0.5 text-3xl font-semibold tracking-tight">Today</h1>
         </div>
-        <button onClick={refreshNow} disabled={refreshing}>
-          {refreshing ? 'syncing…' : 'sync'}
-        </button>
+        <Button
+          onClick={refreshNow}
+          disabled={refreshing}
+          variant="outline"
+          size="sm"
+          className="gap-1.5"
+        >
+          <RefreshCw className={cn('h-4 w-4', refreshing && 'animate-spin')} />
+          {refreshing ? 'Syncing…' : 'Sync'}
+        </Button>
       </header>
 
-      <section
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          marginTop: 24,
-        }}
-      >
-        <div style={{ position: 'relative' }}>
+      <section className="flex flex-col items-center pt-2">
+        <div className="relative">
           <Donut intake={breakdown.intake} burn={breakdown.burn} />
-          <div
-            style={{
-              position: 'absolute',
-              inset: 0,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <span style={{ fontSize: 12, color: 'var(--muted)', textTransform: 'uppercase' }}>
-              net
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <span className="text-[11px] uppercase tracking-wide text-muted-foreground">
+              Net
             </span>
-            <span style={{ fontSize: 44, fontWeight: 700, color: netColor }}>
-              {Math.abs(net) > 0 ? `${net > 0 ? '+' : '−'}${fmt.format(Math.abs(net))}` : '0'}
+            <span className={cn('text-5xl font-bold leading-none', netClass)}>
+              {Math.abs(net) > 0
+                ? `${net > 0 ? '+' : '−'}${fmt.format(Math.abs(net))}`
+                : '0'}
             </span>
-            <span style={{ fontSize: 12, color: 'var(--muted)' }}>{netLabel}</span>
+            <span className="mt-1 text-xs text-muted-foreground">{netLabel}</span>
           </div>
         </div>
       </section>
 
-      <section style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 24 }}>
-        <Stat label="intake" value={breakdown.intake} dot="var(--intake)" suffix="kcal" />
-        <Stat label="burn" value={breakdown.burn} dot="var(--burn)" suffix="kcal" />
+      <section className="grid grid-cols-2 gap-3">
+        <Stat label="Intake" value={breakdown.intake} dotClass="bg-intake" suffix="kcal" />
+        <Stat label="Burn" value={breakdown.burn} dotClass="bg-burn" suffix="kcal" />
       </section>
 
-      <section style={{ marginTop: 24 }}>
-        <h2 style={{ fontSize: 14, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: 0.5 }}>
-          burn breakdown
+      <section>
+        <h2 className="mb-2 text-xs uppercase tracking-wide text-muted-foreground">
+          Burn breakdown
         </h2>
-        <div style={cardStyle}>
-          <Row label={`base — ${breakdown.baseSource}`} value={breakdown.baseTotal} />
+        <Card className="flex flex-col gap-2 p-4">
+          <Row label={`Base — ${breakdown.baseSource}`} value={breakdown.baseTotal} />
           {breakdown.baseSourceWorkoutsSubtracted > 0 && (
             <Row
               label="− base workouts"
               value={-breakdown.baseSourceWorkoutsSubtracted}
-              muted
+              tone="muted"
             />
           )}
           {breakdown.primaryWorkoutsAdded > 0 && (
@@ -117,11 +132,11 @@ export function Today() {
             <Row
               label="+ watch-off (Oura)"
               value={breakdown.watchOffWorkoutsAdded}
-              accent="var(--warn)"
+              tone="warning"
             />
           )}
-          <Row label="total" value={breakdown.burn} bold />
-        </div>
+          <Row label="Total" value={breakdown.burn} bold />
+        </Card>
       </section>
 
       <BodyCard />
@@ -129,12 +144,12 @@ export function Today() {
       <FitnessCard date={breakdown.date} />
 
       {breakdown.flags.length > 0 && (
-        <section style={{ marginTop: 16 }}>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+        <section>
+          <div className="flex flex-wrap gap-1.5">
             {breakdown.flags.map((f) => (
-              <span key={f} style={tagStyle}>
+              <Badge key={f} variant="default">
                 {f.replaceAll('_', ' ')}
-              </span>
+              </Badge>
             ))}
           </div>
         </section>
@@ -143,84 +158,50 @@ export function Today() {
   )
 }
 
-const cardStyle: React.CSSProperties = {
-  background: 'var(--surface)',
-  border: '1px solid var(--border)',
-  borderRadius: 12,
-  padding: 16,
-  display: 'flex',
-  flexDirection: 'column',
-  gap: 8,
-}
-
-const tagStyle: React.CSSProperties = {
-  fontSize: 11,
-  padding: '4px 8px',
-  borderRadius: 999,
-  background: 'var(--surface-2)',
-  border: '1px solid var(--border)',
-  color: 'var(--muted)',
-}
-
 function Stat({
   label,
   value,
-  dot,
+  dotClass,
   suffix,
 }: {
   label: string
   value: number
-  dot: string
+  dotClass: string
   suffix: string
 }) {
   return (
-    <div style={cardStyle}>
-      <span
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 8,
-          fontSize: 12,
-          color: 'var(--muted)',
-          textTransform: 'uppercase',
-          letterSpacing: 0.5,
-        }}
-      >
-        <span
-          style={{ width: 8, height: 8, borderRadius: 4, background: dot, display: 'inline-block' }}
-        />
+    <Card className="flex flex-col gap-2 p-4">
+      <span className="flex items-center gap-2 text-[11px] uppercase tracking-wide text-muted-foreground">
+        <span className={cn('inline-block h-2 w-2 rounded-full', dotClass)} />
         {label}
       </span>
-      <span style={{ fontSize: 22, fontWeight: 600 }}>
-        {fmt.format(value)} <span style={{ fontSize: 12, color: 'var(--muted)' }}>{suffix}</span>
+      <span className="text-2xl font-semibold leading-none">
+        {fmt.format(value)}{' '}
+        <span className="text-xs font-normal text-muted-foreground">{suffix}</span>
       </span>
-    </div>
+    </Card>
   )
 }
 
 function Row({
   label,
   value,
-  muted = false,
+  tone,
   bold = false,
-  accent,
 }: {
   label: string
   value: number
-  muted?: boolean
+  tone?: 'muted' | 'warning'
   bold?: boolean
-  accent?: string
 }) {
   return (
     <div
-      style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        color: muted ? 'var(--muted)' : accent ?? 'var(--text)',
-        fontWeight: bold ? 600 : 400,
-        borderTop: bold ? '1px solid var(--border)' : 'none',
-        paddingTop: bold ? 8 : 0,
-      }}
+      className={cn(
+        'flex justify-between',
+        tone === 'muted' && 'text-muted-foreground',
+        tone === 'warning' && 'text-warning',
+        bold && 'border-t border-border pt-2 font-semibold',
+      )}
     >
       <span>{label}</span>
       <span>

@@ -1,4 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
+import { Plus, Trash2 } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
+import { cn } from '@/lib/utils'
 import { api, type BodyMeasurement } from '../lib/api'
 import { LogBodySheet } from './LogBodySheet'
 
@@ -31,38 +36,34 @@ export function BodyCard() {
   const m = series.length > 0 ? series[series.length - 1]! : null
   const measured = m?.measuredAt ? new Date(m.measuredAt) : null
   const ago = measured ? humanAgo(measured) : null
-
   const prior = m ? findPrior(series, m) : null
 
   return (
-    <section style={cardStyle}>
-      <div style={headerRow}>
-        <span style={label}>Body</span>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+    <Card className="flex flex-col gap-3 p-4">
+      <header className="flex items-center justify-between">
+        <span className="text-xs uppercase tracking-wide text-muted-foreground">Body</span>
+        <div className="flex items-center gap-2">
           {m && (
-            <span style={badge}>
+            <Badge variant="default">
               {m.source}
               {ago ? ` · ${ago}` : ''}
-            </span>
+            </Badge>
           )}
-          <button
-            type="button"
-            onClick={() => setSheetOpen(true)}
-            style={{ padding: '4px 10px' }}
-          >
-            log
-          </button>
+          <Button size="sm" variant="outline" onClick={() => setSheetOpen(true)} className="gap-1.5">
+            <Plus className="h-3.5 w-3.5" />
+            Log
+          </Button>
         </div>
-      </div>
+      </header>
 
       {!m && (
-        <div style={{ fontSize: 12, color: 'var(--muted)' }}>
-          No measurements yet — tap "log" to add one.
-        </div>
+        <p className="text-sm text-muted-foreground">
+          No measurements yet — tap “Log” to add one.
+        </p>
       )}
 
       {m && (
-        <div style={statsGrid}>
+        <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
           {m.weightKg != null && (
             <Stat
               label="Weight"
@@ -92,14 +93,16 @@ export function BodyCard() {
           )}
           {m.skeletalMusclePct != null && m.muscleMassKg == null && (
             <Stat
-              label="Skeletal muscle"
+              label="Skel. muscle"
               value={`${fmt1.format(m.skeletalMusclePct)} %`}
               delta={diff(m.skeletalMusclePct, prior?.skeletalMusclePct)}
               suffix="%"
               betterDirection="up"
             />
           )}
-          {m.waterPct != null && <Stat label="Water" value={`${fmt1.format(m.waterPct)} %`} />}
+          {m.waterPct != null && (
+            <Stat label="Water" value={`${fmt1.format(m.waterPct)} %`} />
+          )}
           {m.visceralFat != null && (
             <Stat
               label="Visceral"
@@ -108,29 +111,26 @@ export function BodyCard() {
               betterDirection="down"
             />
           )}
-          {m.bmrKcal != null && <Stat label="BMR" value={`${fmt0.format(m.bmrKcal)} kcal`} />}
+          {m.bmrKcal != null && (
+            <Stat label="BMR" value={`${fmt0.format(m.bmrKcal)} kcal`} />
+          )}
         </div>
       )}
 
       {m?.source === 'manual' && m.id && (
-        <button
-          type="button"
+        <Button
+          variant="ghost"
+          size="sm"
+          className="self-end text-muted-foreground"
           onClick={async () => {
             if (!confirm('Delete this manual entry?')) return
             await api.deleteBodyLog(m.id!)
             void load()
           }}
-          style={{
-            alignSelf: 'flex-end',
-            padding: '4px 10px',
-            fontSize: 11,
-            color: 'var(--muted)',
-            background: 'transparent',
-            border: '1px solid var(--border)',
-          }}
         >
-          delete entry
-        </button>
+          <Trash2 className="h-3.5 w-3.5" />
+          Delete entry
+        </Button>
       )}
 
       <LogBodySheet
@@ -141,7 +141,7 @@ export function BodyCard() {
           void load()
         }}
       />
-    </section>
+    </Card>
   )
 }
 
@@ -160,7 +160,7 @@ function findPrior(series: SeriesEntry[], current: SeriesEntry): SeriesEntry | n
 }
 
 function Stat({
-  label: l,
+  label,
   value,
   delta,
   suffix,
@@ -179,19 +179,19 @@ function Stat({
         ? delta < 0
         : delta > 0
       : null
-  const deltaColor =
+  const deltaClass =
     isImprovement === true
-      ? 'var(--accent)'
+      ? 'text-primary'
       : isImprovement === false
-        ? 'var(--warn)'
-        : 'var(--muted)'
+        ? 'text-warning'
+        : 'text-muted-foreground'
 
   return (
     <div>
-      <div style={statLabel}>{l}</div>
-      <div style={statValue}>{value}</div>
+      <div className="text-[11px] text-muted-foreground">{label}</div>
+      <div className="text-base font-semibold">{value}</div>
       {delta != null && (
-        <div style={{ fontSize: 11, color: deltaColor, marginTop: 2 }}>
+        <div className={cn('mt-0.5 text-[11px]', deltaClass)}>
           {sign}
           {fmt1.format(Math.abs(delta))}
           {suffix ? ` ${suffix}` : ''}
@@ -209,53 +209,4 @@ function humanAgo(d: Date): string {
   if (hr < 24) return `${hr}h ago`
   const days = Math.floor(hr / 24)
   return `${days}d ago`
-}
-
-const cardStyle: React.CSSProperties = {
-  background: 'var(--surface)',
-  border: '1px solid var(--border)',
-  borderRadius: 12,
-  padding: 16,
-  marginTop: 16,
-  display: 'flex',
-  flexDirection: 'column',
-  gap: 12,
-}
-
-const headerRow: React.CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-}
-
-const label: React.CSSProperties = {
-  fontSize: 12,
-  color: 'var(--muted)',
-  textTransform: 'uppercase',
-  letterSpacing: 0.5,
-}
-
-const badge: React.CSSProperties = {
-  fontSize: 11,
-  padding: '3px 8px',
-  borderRadius: 999,
-  background: 'var(--surface-2)',
-  border: '1px solid var(--border)',
-  color: 'var(--muted)',
-}
-
-const statsGrid: React.CSSProperties = {
-  display: 'grid',
-  gridTemplateColumns: 'repeat(auto-fit, minmax(80px, 1fr))',
-  gap: 10,
-}
-
-const statLabel: React.CSSProperties = {
-  fontSize: 11,
-  color: 'var(--muted)',
-}
-
-const statValue: React.CSSProperties = {
-  fontSize: 16,
-  fontWeight: 600,
 }
