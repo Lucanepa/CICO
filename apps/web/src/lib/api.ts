@@ -206,6 +206,22 @@ export const api = {
     get<{ ok: boolean; measurement: BodyMeasurement | null }>(`/api/body/latest`),
   bodySeries: (days: number) =>
     get<{ ok: boolean; series: BodyMeasurement[] }>(`/api/body/series?days=${days}`),
+  bodyLog: (body: {
+    date?: string
+    time?: string
+    weightKg?: number
+    fatPct?: number
+    muscleMassKg?: number
+    skeletalMusclePct?: number
+    boneMassKg?: number
+    waterPct?: number
+    visceralFat?: number
+    bmrKcal?: number
+    bodyAge?: number
+    bmi?: number
+    note?: string
+  }) => send<{ ok: boolean; id: string | null }>(`/api/body/log`, 'POST', body),
+  deleteBodyLog: (id: string) => send<{ ok: boolean }>(`/api/body/log/${id}`, 'DELETE'),
 }
 
 export type BodyMeasurement = {
