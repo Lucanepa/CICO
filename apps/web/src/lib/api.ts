@@ -244,6 +244,9 @@ export type Integration = {
   connected: boolean
   expiresAt: string | null
   startUrl: string
+  lastSyncedAt: string | null
+  lastRunStatus: string | null
+  lastError: string | null
 }
 
 export type EnergyBalance = {

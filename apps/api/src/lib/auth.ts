@@ -16,7 +16,10 @@ declare module 'hono' {
 
 type Cached = { user: AuthUser; expiresAt: number }
 const cache = new Map<string, Cached>()
-const TTL_MS = 60_000
+// Token verification cache: validates with Directus, then trusts for this long.
+// 10min is well under Directus's default 15min access-token TTL, so a logout
+// or role-change is reflected within ~10min without re-verifying every request.
+const TTL_MS = 10 * 60_000
 
 async function verifyToken(directusUrl: string, token: string): Promise<AuthUser | null> {
   const cached = cache.get(token)

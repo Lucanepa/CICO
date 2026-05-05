@@ -12,6 +12,9 @@ type IntegrationStatus = {
   connected: boolean
   expiresAt: string | null
   startUrl: string
+  lastSyncedAt: string | null
+  lastRunStatus: string | null
+  lastError: string | null
 }
 
 const SOURCES = [
@@ -46,17 +49,29 @@ export function integrationsRoute(env: Env) {
 
   app.get('/status', async (c) => {
     const database = db(env.DATABASE_URL)
-    const tokens = await database
-      .select({
-        source: schema.oauthTokens.source,
-        expiresAt: schema.oauthTokens.expiresAt,
-      })
-      .from(schema.oauthTokens)
+    const [tokens, syncRows] = await Promise.all([
+      database
+        .select({
+          source: schema.oauthTokens.source,
+          expiresAt: schema.oauthTokens.expiresAt,
+        })
+        .from(schema.oauthTokens),
+      database
+        .select({
+          source: schema.syncState.source,
+          lastSyncedAt: schema.syncState.lastSyncedAt,
+          lastRunStatus: schema.syncState.lastRunStatus,
+          lastError: schema.syncState.lastError,
+        })
+        .from(schema.syncState),
+    ])
     const tokenBySource = new Map(tokens.map((t) => [t.source, t]))
+    const syncBySource = new Map(syncRows.map((s) => [s.source, s]))
 
     const apiBase = absoluteApiBase(c.req.url)
     const out: IntegrationStatus[] = SOURCES.map((s) => {
       const tok = tokenBySource.get(s.source)
+      const sync = syncBySource.get(s.source)
       const configured = s.envKeys.every((k) => Boolean(process.env[k]))
       return {
         source: s.source,
@@ -66,6 +81,9 @@ export function integrationsRoute(env: Env) {
         connected: Boolean(tok),
         expiresAt: tok?.expiresAt ? tok.expiresAt.toISOString() : null,
         startUrl: `${apiBase}/api/oauth/${s.source}/start`,
+        lastSyncedAt: sync?.lastSyncedAt ? sync.lastSyncedAt.toISOString() : null,
+        lastRunStatus: sync?.lastRunStatus ?? null,
+        lastError: sync?.lastError ?? null,
       }
     })
     return c.json({ ok: true, integrations: out })

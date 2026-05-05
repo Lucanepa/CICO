@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState } from 'react'
-import { RefreshCw } from 'lucide-react'
+import { ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react'
 import { BodyCard } from '@/components/BodyCard'
 import { Donut } from '@/components/Donut'
 import { EnergyBalanceChip } from '@/components/EnergyBalanceChip'
 import { FitnessCard } from '@/components/FitnessCard'
+import { SyncStatusBar } from '@/components/SyncStatusBar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -12,12 +13,25 @@ import { api, localIsoDate, type CicoBreakdown } from '../lib/api'
 
 const fmt = new Intl.NumberFormat('en-US')
 
+function shiftIsoDate(iso: string, deltaDays: number): string {
+  const d = new Date(`${iso}T00:00:00`)
+  d.setDate(d.getDate() + deltaDays)
+  return new Intl.DateTimeFormat('en-CA', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(d)
+}
+
 export function Today() {
-  const [date] = useState<string>(() => localIsoDate())
+  const [date, setDate] = useState<string>(() => localIsoDate())
   const [breakdown, setBreakdown] = useState<CicoBreakdown | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [refreshing, setRefreshing] = useState(false)
+
+  const today = localIsoDate()
+  const isToday = date === today
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -76,19 +90,49 @@ export function Today() {
           <p className="text-xs uppercase tracking-wide text-muted-foreground">
             {prettyDate(breakdown.date)}
           </p>
-          <h1 className="mt-0.5 text-3xl font-semibold tracking-tight">Today</h1>
+          <h1 className="mt-0.5 text-3xl font-semibold tracking-tight">
+            {isToday ? 'Today' : relativeLabel(breakdown.date, today)}
+          </h1>
         </div>
-        <Button
-          onClick={refreshNow}
-          disabled={refreshing}
-          variant="outline"
-          size="sm"
-          className="gap-1.5"
-        >
-          <RefreshCw className={cn('h-4 w-4', refreshing && 'animate-spin')} />
-          {refreshing ? 'Syncing…' : 'Sync'}
-        </Button>
+        <div className="flex items-center gap-1.5">
+          <Button
+            onClick={() => setDate((d) => shiftIsoDate(d, -1))}
+            variant="outline"
+            size="sm"
+            className="px-2"
+            aria-label="Previous day"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <Button
+            onClick={() => setDate((d) => shiftIsoDate(d, 1))}
+            variant="outline"
+            size="sm"
+            disabled={isToday}
+            className="px-2"
+            aria-label="Next day"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+          {!isToday && (
+            <Button onClick={() => setDate(today)} variant="outline" size="sm">
+              Today
+            </Button>
+          )}
+          <Button
+            onClick={refreshNow}
+            disabled={refreshing}
+            variant="outline"
+            size="sm"
+            className="gap-1.5"
+          >
+            <RefreshCw className={cn('h-4 w-4', refreshing && 'animate-spin')} />
+            {refreshing ? 'Syncing…' : 'Sync'}
+          </Button>
+        </div>
       </header>
+
+      <SyncStatusBar refreshTick={refreshing ? 0 : 1} />
 
       <section className="flex flex-col items-center pt-2">
         <div className="relative">
@@ -223,4 +267,14 @@ function prettyDate(iso: string): string {
     day: 'numeric',
     month: 'short',
   }).format(d)
+}
+
+function relativeLabel(iso: string, todayIso: string): string {
+  const a = new Date(`${iso}T00:00:00`)
+  const b = new Date(`${todayIso}T00:00:00`)
+  const days = Math.round((a.getTime() - b.getTime()) / 86_400_000)
+  if (days === -1) return 'Yesterday'
+  if (days === 1) return 'Tomorrow'
+  if (days < 0 && days >= -6) return `${-days}d ago`
+  return new Intl.DateTimeFormat(undefined, { weekday: 'long' }).format(a)
 }
