@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import { BodyCard } from '../components/BodyCard'
 import { Donut } from '../components/Donut'
+import { EnergyBalanceChip } from '../components/EnergyBalanceChip'
+import { FitnessCard } from '../components/FitnessCard'
 import { api, localIsoDate, type CicoBreakdown } from '../lib/api'
 
 const fmt = new Intl.NumberFormat('en-US')
@@ -123,6 +125,8 @@ export function Today() {
       </section>
 
       <BodyCard />
+      <EnergyBalanceChip date={breakdown.date} />
+      <FitnessCard date={breakdown.date} />
 
       {breakdown.flags.length > 0 && (
         <section style={{ marginTop: 16 }}>

@@ -12,6 +12,7 @@ import { ouraOauth } from './oauth/oura.js'
 import { stravaOauth } from './oauth/strava.js'
 import { withingsOauth } from './oauth/withings.js'
 import { bodyRoute } from './routes/body.js'
+import { fitnessRoute } from './routes/fitness.js'
 import { foodLogRoute } from './routes/food-log.js'
 import { foodsRoute } from './routes/foods.js'
 import { health } from './routes/health.js'
@@ -51,6 +52,7 @@ app.route('/api/food-log', foodLogRoute(env))
 app.route('/api/workouts', workoutsRoute(env))
 app.route('/api/trends', trendsRoute(env))
 app.route('/api/body', bodyRoute(env))
+app.route('/api/fitness', fitnessRoute(env))
 app.route('/api/oauth/oura', ouraOauth(env, (k) => process.env[k]))
 app.route('/api/oauth/strava', stravaOauth(env, (k) => process.env[k]))
 app.route('/api/oauth/google', googleOauth(env, (k) => process.env[k]))

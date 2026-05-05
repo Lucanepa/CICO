@@ -2,6 +2,7 @@ import { and, asc, desc, eq, gte, lte } from 'drizzle-orm'
 import { Hono } from 'hono'
 import { z } from 'zod'
 import { schema } from '@cico/db'
+import { computeEnergyBalance } from '../cico/energy-balance.js'
 import { getRequestEmail } from '../lib/auth.js'
 import { db } from '../lib/db.js'
 import type { Env } from '../lib/env.js'
@@ -129,6 +130,18 @@ export function bodyRoute(env: Env) {
     return c.json({ ok: true })
   })
 
+  app.get('/energy-balance', async (c) => {
+    const dateParam = c.req.query('date')
+    const date = dateParam ?? localIsoDate(env.TZ)
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return c.json({ error: 'invalid_date' }, 400)
+    const days = clampInt(c.req.query('days'), 7, 60, 14)
+
+    const database = db(env.DATABASE_URL)
+    const userId = await getOrCreateDefaultUser(database, getRequestEmail(c, env))
+    const result = await computeEnergyBalance(database, userId, date, days)
+    return c.json({ ok: true, energyBalance: result })
+  })
+
   app.get('/series', async (c) => {
     const days = clampInt(c.req.query('days'), 1, 365, 90)
     const start = new Date()
@@ -140,6 +153,7 @@ export function bodyRoute(env: Env) {
     const userId = await getOrCreateDefaultUser(database, getRequestEmail(c, env))
     const rows = await database
       .select({
+        id: schema.bodyMeasurements.id,
         date: schema.bodyMeasurements.date,
         measuredAt: schema.bodyMeasurements.measuredAt,
         source: schema.bodyMeasurements.source,

@@ -222,9 +222,51 @@ export const api = {
     note?: string
   }) => send<{ ok: boolean; id: string | null }>(`/api/body/log`, 'POST', body),
   deleteBodyLog: (id: string) => send<{ ok: boolean }>(`/api/body/log/${id}`, 'DELETE'),
+  fitnessToday: (date?: string) =>
+    get<{ ok: boolean; fitness: FitnessSnapshot }>(
+      `/api/fitness/today${date ? `?date=${date}` : ''}`,
+    ),
+  energyBalance: (date?: string, days?: number) =>
+    get<{ ok: boolean; energyBalance: EnergyBalance | null }>(
+      `/api/body/energy-balance${qs({ date, days })}`,
+    ),
+}
+
+export type EnergyBalance = {
+  windowDays: number
+  samples: number
+  firstWeightKg: number
+  lastWeightKg: number
+  slopeKgPerDay: number
+  slopeKgPerWeek: number
+  kcalPerDay: number
+}
+
+function qs(params: Record<string, string | number | undefined>): string {
+  const parts = Object.entries(params)
+    .filter(([, v]) => v !== undefined && v !== null && v !== '')
+    .map(([k, v]) => `${k}=${encodeURIComponent(String(v))}`)
+  return parts.length ? `?${parts.join('&')}` : ''
+}
+
+export type FitnessSnapshot = {
+  date: string
+  steps: number | null
+  restingHr: number | null
+  activeCalories: number | null
+  sleep: {
+    date: string
+    score: number | null
+    totalMin: number | null
+    deepMin: number | null
+    remMin: number | null
+    hrvAvg: number | null
+    source: string
+  } | null
 }
 
 export type BodyMeasurement = {
+  id?: string
   date: string
   measuredAt: string | null
   source: string
@@ -235,7 +277,9 @@ export type BodyMeasurement = {
   boneMassKg?: number | null
   waterPct: number | null
   visceralFat: number | null
-  bmrKcal: number | null
+  bmrKcal?: number | null
+  bodyAge?: number | null
+  bmi?: number | null
 }
 
 export function localIsoDate(): string {

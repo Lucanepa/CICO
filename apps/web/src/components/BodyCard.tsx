@@ -5,15 +5,17 @@ import { LogBodySheet } from './LogBodySheet'
 const fmt1 = new Intl.NumberFormat('en-US', { maximumFractionDigits: 1 })
 const fmt0 = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 })
 
+type SeriesEntry = BodyMeasurement & { id?: string }
+
 export function BodyCard() {
-  const [m, setM] = useState<BodyMeasurement | null | undefined>(undefined)
+  const [series, setSeries] = useState<SeriesEntry[] | undefined>(undefined)
   const [error, setError] = useState<string | null>(null)
   const [sheetOpen, setSheetOpen] = useState(false)
 
   const load = useCallback(async () => {
     try {
-      const res = await api.bodyLatest()
-      setM(res.measurement)
+      const res = await api.bodySeries(60)
+      setSeries(res.series)
     } catch (err) {
       setError((err as Error).message)
     }
@@ -23,11 +25,14 @@ export function BodyCard() {
     void load()
   }, [load])
 
-  if (m === undefined) return null
+  if (series === undefined) return null
   if (error) return null
 
+  const m = series.length > 0 ? series[series.length - 1]! : null
   const measured = m?.measuredAt ? new Date(m.measuredAt) : null
   const ago = measured ? humanAgo(measured) : null
+
+  const prior = m ? findPrior(series, m) : null
 
   return (
     <section style={cardStyle}>
@@ -58,25 +63,80 @@ export function BodyCard() {
 
       {m && (
         <div style={statsGrid}>
-          {m.weightKg != null && <Stat label="Weight" value={`${fmt1.format(m.weightKg)} kg`} />}
-          {m.fatPct != null && <Stat label="Fat" value={`${fmt1.format(m.fatPct)} %`} />}
+          {m.weightKg != null && (
+            <Stat
+              label="Weight"
+              value={`${fmt1.format(m.weightKg)} kg`}
+              delta={diff(m.weightKg, prior?.weightKg)}
+              suffix="kg"
+              betterDirection="down"
+            />
+          )}
+          {m.fatPct != null && (
+            <Stat
+              label="Fat"
+              value={`${fmt1.format(m.fatPct)} %`}
+              delta={diff(m.fatPct, prior?.fatPct)}
+              suffix="%"
+              betterDirection="down"
+            />
+          )}
           {m.muscleMassKg != null && (
-            <Stat label="Muscle" value={`${fmt1.format(m.muscleMassKg)} kg`} />
+            <Stat
+              label="Muscle"
+              value={`${fmt1.format(m.muscleMassKg)} kg`}
+              delta={diff(m.muscleMassKg, prior?.muscleMassKg)}
+              suffix="kg"
+              betterDirection="up"
+            />
           )}
           {m.skeletalMusclePct != null && m.muscleMassKg == null && (
-            <Stat label="Skeletal muscle" value={`${fmt1.format(m.skeletalMusclePct)} %`} />
+            <Stat
+              label="Skeletal muscle"
+              value={`${fmt1.format(m.skeletalMusclePct)} %`}
+              delta={diff(m.skeletalMusclePct, prior?.skeletalMusclePct)}
+              suffix="%"
+              betterDirection="up"
+            />
           )}
           {m.waterPct != null && <Stat label="Water" value={`${fmt1.format(m.waterPct)} %`} />}
           {m.visceralFat != null && (
-            <Stat label="Visceral" value={fmt1.format(m.visceralFat)} />
+            <Stat
+              label="Visceral"
+              value={fmt1.format(m.visceralFat)}
+              delta={diff(m.visceralFat, prior?.visceralFat)}
+              betterDirection="down"
+            />
           )}
           {m.bmrKcal != null && <Stat label="BMR" value={`${fmt0.format(m.bmrKcal)} kcal`} />}
         </div>
       )}
 
+      {m?.source === 'manual' && m.id && (
+        <button
+          type="button"
+          onClick={async () => {
+            if (!confirm('Delete this manual entry?')) return
+            await api.deleteBodyLog(m.id!)
+            void load()
+          }}
+          style={{
+            alignSelf: 'flex-end',
+            padding: '4px 10px',
+            fontSize: 11,
+            color: 'var(--muted)',
+            background: 'transparent',
+            border: '1px solid var(--border)',
+          }}
+        >
+          delete entry
+        </button>
+      )}
+
       <LogBodySheet
         open={sheetOpen}
         onClose={() => setSheetOpen(false)}
+        prefill={m ?? undefined}
         onSaved={() => {
           void load()
         }}
@@ -85,11 +145,58 @@ export function BodyCard() {
   )
 }
 
-function Stat({ label: l, value }: { label: string; value: string }) {
+function diff(now: number | null | undefined, prior: number | null | undefined): number | null {
+  if (now == null || prior == null) return null
+  const d = now - prior
+  return Math.abs(d) < 0.01 ? null : d
+}
+
+function findPrior(series: SeriesEntry[], current: SeriesEntry): SeriesEntry | null {
+  for (let i = series.length - 2; i >= 0; i--) {
+    const e = series[i]!
+    if (e.date !== current.date) return e
+  }
+  return null
+}
+
+function Stat({
+  label: l,
+  value,
+  delta,
+  suffix,
+  betterDirection,
+}: {
+  label: string
+  value: string
+  delta?: number | null
+  suffix?: string
+  betterDirection?: 'up' | 'down'
+}) {
+  const sign = delta == null ? '' : delta > 0 ? '+' : '−'
+  const isImprovement =
+    delta != null && betterDirection
+      ? betterDirection === 'down'
+        ? delta < 0
+        : delta > 0
+      : null
+  const deltaColor =
+    isImprovement === true
+      ? 'var(--accent)'
+      : isImprovement === false
+        ? 'var(--warn)'
+        : 'var(--muted)'
+
   return (
     <div>
       <div style={statLabel}>{l}</div>
       <div style={statValue}>{value}</div>
+      {delta != null && (
+        <div style={{ fontSize: 11, color: deltaColor, marginTop: 2 }}>
+          {sign}
+          {fmt1.format(Math.abs(delta))}
+          {suffix ? ` ${suffix}` : ''}
+        </div>
+      )}
     </div>
   )
 }

@@ -92,6 +92,29 @@ services:
     expose:
       - "8055"
 
+  pgbackup:
+    image: prodrigestivill/postgres-backup-local:17
+    container_name: cico-pgbackup
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: ${POSTGRES_DB},${DIRECTUS_DB_DATABASE:-directus}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_EXTRA_OPTS: "-Z 6 --schema=public --blobs"
+      SCHEDULE: ${PGBACKUP_SCHEDULE:-@daily}
+      BACKUP_KEEP_DAYS: ${PGBACKUP_KEEP_DAYS:-14}
+      BACKUP_KEEP_WEEKS: ${PGBACKUP_KEEP_WEEKS:-8}
+      BACKUP_KEEP_MONTHS: ${PGBACKUP_KEEP_MONTHS:-12}
+      HEALTHCHECK_PORT: "8080"
+      TZ: ${TZ:-Europe/Zurich}
+    volumes:
+      - ${PGBACKUP_PATH:-./backups}:/backups
+
   cloudflared:
     image: cloudflare/cloudflared:latest
     container_name: cico-tunnel

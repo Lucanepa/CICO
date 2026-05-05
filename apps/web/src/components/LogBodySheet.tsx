@@ -1,11 +1,12 @@
-import { useState, type FormEvent } from 'react'
-import { api } from '../lib/api'
+import { useEffect, useState, type FormEvent } from 'react'
+import { api, type BodyMeasurement } from '../lib/api'
 import { Sheet } from './Sheet'
 
 type Props = {
   open: boolean
   onClose: () => void
   onSaved: () => void
+  prefill?: BodyMeasurement | null
 }
 
 type FieldKey =
@@ -33,11 +34,25 @@ const FIELDS: Array<{ key: FieldKey; label: string; suffix: string; step: string
   { key: 'bmi', label: 'BMI', suffix: '', step: '0.1' },
 ]
 
-export function LogBodySheet({ open, onClose, onSaved }: Props) {
+export function LogBodySheet({ open, onClose, onSaved, prefill }: Props) {
   const [values, setValues] = useState<Partial<Record<FieldKey, string>>>({})
   const [note, setNote] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!open) return
+    const next: Partial<Record<FieldKey, string>> = {}
+    if (prefill) {
+      for (const { key } of FIELDS) {
+        const v = (prefill as unknown as Record<FieldKey, number | null | undefined>)[key]
+        if (v != null) next[key] = String(v)
+      }
+    }
+    setValues(next)
+    setNote('')
+    setError(null)
+  }, [open, prefill])
 
   const reset = () => {
     setValues({})
