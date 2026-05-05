@@ -42,7 +42,7 @@ CREATE TABLE "food_log" (
 CREATE TABLE "foods" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"source" text NOT NULL,
-	"sourceId" text NOT NULL,
+	"source_id" text NOT NULL,
 	"name" text NOT NULL,
 	"kcal_100g" real NOT NULL,
 	"p_100g" real,
@@ -77,8 +77,8 @@ CREATE TABLE "users" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"email" text NOT NULL,
 	"settings_jsonb" jsonb DEFAULT '{}'::jsonb NOT NULL,
-	"createdAt" timestamp with time zone DEFAULT now() NOT NULL,
-	"updatedAt" timestamp with time zone DEFAULT now() NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
 	CONSTRAINT "users_email_unique" UNIQUE("email")
 );
 --> statement-breakpoint
@@ -99,7 +99,7 @@ CREATE TABLE "workouts" (
 	"is_primary" boolean DEFAULT false NOT NULL,
 	"duplicate_of" uuid,
 	"raw_payload_jsonb" jsonb,
-	"createdAt" timestamp with time zone DEFAULT now() NOT NULL
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE "sleep_sessions" (
