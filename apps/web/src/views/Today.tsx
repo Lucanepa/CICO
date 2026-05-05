@@ -61,7 +61,7 @@ export function Today() {
   if (!breakdown) return null
 
   const net = breakdown.net
-  const netLabel = net === 0 ? 'even' : net > 0 ? 'surplus' : 'deficit'
+  const netLabel = net === 0 ? 'Even' : net > 0 ? 'Surplus' : 'Deficit'
   const netClass =
     net === 0
       ? 'text-foreground'
@@ -146,11 +146,15 @@ export function Today() {
       {breakdown.flags.length > 0 && (
         <section>
           <div className="flex flex-wrap gap-1.5">
-            {breakdown.flags.map((f) => (
-              <Badge key={f} variant="default">
-                {f.replaceAll('_', ' ')}
-              </Badge>
-            ))}
+            {breakdown.flags.map((f) => {
+              const text = f.replaceAll('_', ' ')
+              const capitalized = text.charAt(0).toUpperCase() + text.slice(1)
+              return (
+                <Badge key={f} variant="default">
+                  {capitalized}
+                </Badge>
+              )
+            })}
           </div>
         </section>
       )}
