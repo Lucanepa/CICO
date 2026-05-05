@@ -230,6 +230,20 @@ export const api = {
     get<{ ok: boolean; energyBalance: EnergyBalance | null }>(
       `/api/body/energy-balance${qs({ date, days })}`,
     ),
+  integrations: () =>
+    get<{ ok: boolean; integrations: Integration[] }>(`/api/integrations/status`),
+  disconnectIntegration: (source: string) =>
+    send<{ ok: boolean }>(`/api/integrations/disconnect/${source}`, 'POST'),
+}
+
+export type Integration = {
+  source: 'oura' | 'strava' | 'google' | 'withings'
+  label: string
+  description: string
+  configured: boolean
+  connected: boolean
+  expiresAt: string | null
+  startUrl: string
 }
 
 export type EnergyBalance = {

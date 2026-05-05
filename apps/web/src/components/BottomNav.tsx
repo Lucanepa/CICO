@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import { Activity, Apple, LineChart, Sun } from 'lucide-react'
+import { Activity, Apple, LineChart, Settings as SettingsIcon, Sun } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const items = [
@@ -7,6 +7,7 @@ const items = [
   { to: '/activity', label: 'Activity', icon: Activity },
   { to: '/food', label: 'Food', icon: Apple },
   { to: '/trends', label: 'Trends', icon: LineChart },
+  { to: '/settings', label: 'Settings', icon: SettingsIcon },
 ] as const
 
 export function BottomNav() {
