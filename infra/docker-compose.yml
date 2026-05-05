@@ -52,14 +52,15 @@ services:
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
       CRON_PREWARM_SCHEDULE: ${CRON_PREWARM_SCHEDULE:-0 3 * * *}
       DEFAULT_USER_EMAIL: ${DEFAULT_USER_EMAIL:-me@cico.local}
-    networks:
-      - default
-      - tunnel
     expose:
       - "8787"
 
-networks:
-  default:
-  tunnel:
-    name: ${TUNNEL_NETWORK:-cloudflared}
-    external: true
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: cico-tunnel
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${TUNNEL_TOKEN}
+    depends_on:
+      - api
