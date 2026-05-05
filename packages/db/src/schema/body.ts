@@ -28,12 +28,54 @@ export const bodyMeasurements = pgTable(
 
     heartRate: integer('heart_rate'),
     pwv: real(),
+    systolicBp: integer('systolic_bp'),
+    diastolicBp: integer('diastolic_bp'),
+    spo2Pct: real('spo2_pct'),
+    vascularAge: integer('vascular_age'),
+    nerveHealthScore: real('nerve_health_score'),
+    extracellularWaterKg: real('extracellular_water_kg'),
+    intracellularWaterKg: real('intracellular_water_kg'),
 
     rawPayloadJsonb: jsonb('raw_payload_jsonb'),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => ({
     uniqUserSourceSourceId: uniqueIndex('body_measurements_user_source_sourceid_uniq').on(
+      t.userId,
+      t.source,
+      t.sourceId,
+    ),
+  }),
+)
+
+export const ecgRecordings = pgTable(
+  'ecg_recordings',
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    source: text().notNull(),
+    sourceId: text('source_id').notNull(),
+    date: date().notNull(),
+    measuredAt: timestamp('measured_at', { withTimezone: true }),
+    deviceModel: text('device_model'),
+    afibClassification: text('afib_classification'),
+    averageHeartRate: integer('average_heart_rate'),
+    qrsMs: integer('qrs_ms'),
+    prMs: integer('pr_ms'),
+    qtMs: integer('qt_ms'),
+    qtcMs: integer('qtc_ms'),
+    durationSec: integer('duration_sec'),
+    samplingRateHz: integer('sampling_rate_hz'),
+    leadCount: integer('lead_count'),
+    signalUrl: text('signal_url'),
+    signalJsonb: jsonb('signal_jsonb'),
+    rawPayloadJsonb: jsonb('raw_payload_jsonb'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    uniqUserSourceSourceId: uniqueIndex('ecg_recordings_user_source_sourceid_uniq').on(
       t.userId,
       t.source,
       t.sourceId,
