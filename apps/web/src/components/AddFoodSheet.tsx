@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
 import { api, type SearchHit } from '../lib/api'
+import { foodIcon } from '@/lib/foodIcon'
 import { Sheet } from './Sheet'
 
 declare class BarcodeDetectorCtor {
@@ -378,20 +379,26 @@ function UrlPane({ onPick }: { onPick: (hit: SearchHit) => void }) {
 }
 
 function HitRow({ hit, onPick }: { hit: SearchHit; onPick: () => void }) {
+  const Icon = foodIcon(hit.name)
   return (
     <button
       type="button"
       onClick={onPick}
-      className="flex items-center justify-between rounded-md border border-border bg-background px-3 py-2 text-left transition-colors hover:bg-muted"
+      className="flex items-center justify-between gap-3 rounded-md border border-border bg-background px-3 py-2 text-left transition-colors hover:bg-muted"
     >
-      <div className="flex flex-col">
-        <span className="text-sm">{hit.name}</span>
-        <span className="text-[11px] text-muted-foreground">
-          {hit.source}
-          {hit.barcode ? ` · ${hit.barcode}` : ''}
+      <div className="flex min-w-0 flex-1 items-center gap-3">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
+          <Icon className="h-4 w-4" strokeWidth={1.75} />
         </span>
+        <div className="flex min-w-0 flex-col">
+          <span className="truncate text-sm">{hit.name}</span>
+          <span className="text-[11px] text-muted-foreground">
+            {hit.source}
+            {hit.barcode ? ` · ${hit.barcode}` : ''}
+          </span>
+        </div>
       </div>
-      <span className="text-sm font-semibold">
+      <span className="shrink-0 text-sm font-semibold">
         {Math.round(hit.kcal100g)} <span className="text-[10px] text-muted-foreground">kcal/100g</span>
       </span>
     </button>
