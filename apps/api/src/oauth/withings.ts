@@ -53,6 +53,12 @@ export function withingsOauth(env: Env, getEnv: (k: string) => string | undefine
   app.get('/callback', async (c) => {
     const code = c.req.query('code')
     const state = c.req.query('state')
+
+    // Withings does a pre-flight reachability probe with no query params —
+    // answer 200 for that so the partner check passes; real OAuth callbacks
+    // always carry ?code= and ?state=.
+    if (!code && !state) return c.body(null, 200)
+
     const cookieState = getCookie(c, 'withings_oauth_state')
     deleteCookie(c, 'withings_oauth_state', { path: '/' })
 
