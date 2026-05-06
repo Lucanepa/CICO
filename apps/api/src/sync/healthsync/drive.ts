@@ -64,10 +64,14 @@ export async function* listFolderFiles(
   modifiedAfter?: Date,
 ): AsyncGenerator<DriveFile> {
   let pageToken: string | undefined
-  const qParts = ['trashed = false', "mimeType = 'text/csv'"]
+  // Note: we deliberately do NOT filter by mimeType. Google sometimes
+  // labels Health Sync CSVs as "text/troff" instead of "text/csv" based
+  // on content sniffing. We rely on the .csv suffix + name pattern instead.
+  const qParts = ['trashed = false']
   if (folderId) {
     // Specific folder: trust everything in it (user opted in by placing files there).
     qParts.unshift(`'${folderId}' in parents`)
+    qParts.push("name contains '.csv'")
   } else {
     // No folder configured: scan whole Drive but server-side filter to
     // health-related filenames so we never read unrelated CSVs.
