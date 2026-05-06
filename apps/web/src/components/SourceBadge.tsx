@@ -10,15 +10,20 @@ const PALETTE: Record<string, string> = {
   manual: 'bg-muted text-muted-foreground',
 }
 
+function label(source: string): string {
+  const cleaned = source.replace('_', ' ')
+  return cleaned.length > 0 ? cleaned.charAt(0).toUpperCase() + cleaned.slice(1) : cleaned
+}
+
 export function SourceBadge({ source }: { source: string }) {
   return (
     <span
       className={cn(
-        'inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide',
+        'inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-medium tracking-wide',
         PALETTE[source] ?? 'bg-secondary text-muted-foreground',
       )}
     >
-      {source.replace('_', ' ')}
+      {label(source)}
     </span>
   )
 }

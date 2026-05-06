@@ -61,13 +61,13 @@ export function Activity() {
         {dayZones ? (
           <ZoneBar zones={dayZones} height={20} />
         ) : (
-          <p className="text-sm text-muted-foreground">No HR data today.</p>
+          <p className="text-sm text-muted-foreground">No HR data for this day.</p>
         )}
       </Card>
 
       <h2 className="text-xs uppercase tracking-wide text-muted-foreground">Workouts</h2>
       {primary.length === 0 && (
-        <p className="text-sm text-muted-foreground">No workouts logged today.</p>
+        <p className="text-sm text-muted-foreground">No workouts on this day.</p>
       )}
       <div className="flex flex-col gap-2.5">
         {primary.map((w) => (
@@ -78,7 +78,7 @@ export function Activity() {
           >
             <div className="flex items-center justify-between gap-2">
               <div className="flex flex-col">
-                <span className="text-base font-semibold">{w.type}</span>
+                <span className="text-base font-semibold">{capitalize(w.type)}</span>
                 <span className="text-xs text-muted-foreground">
                   {timeRange(w.startTime, w.endTime)} · {Math.round(w.durationMin)} min
                 </span>
@@ -124,7 +124,7 @@ function DuplicateRow({ w, onPin }: { w: Workout; onPin: () => Promise<void> }) 
   return (
     <Card className={cn('p-3 opacity-70 bg-secondary/40')}>
       <div className="flex items-center justify-between gap-2">
-        <div className="text-sm">{w.type}</div>
+        <div className="text-sm">{capitalize(w.type)}</div>
         <div className="flex items-center gap-2">
           {w.calories != null && (
             <span className="text-xs text-muted-foreground">{fmt.format(w.calories)} kcal</span>
@@ -166,6 +166,10 @@ function sumZones(arr: Array<ZoneMinutes | null>): ZoneMinutes | null {
     out.z5 += z.z5
   }
   return any ? out : null
+}
+
+function capitalize(s: string): string {
+  return s.length > 0 ? s.charAt(0).toUpperCase() + s.slice(1) : s
 }
 
 function timeRange(startIso: string, endIso: string): string {
