@@ -36,6 +36,9 @@ const SOURCES = [
     description: 'Health Sync CSVs (Huawei + Omron).',
     // FOLDER_ID is optional now: empty means "scan whole Drive by filename pattern".
     envKeys: ['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET'],
+    // The healthsync ingester writes sync state under 'huawei' (the data lane),
+    // not 'google' (the auth lane). Map for the status pill.
+    syncStateKey: 'huawei',
   },
   {
     source: 'withings' as const,
@@ -72,7 +75,7 @@ export function integrationsRoute(env: Env) {
     const apiBase = absoluteApiBase(c.req.url)
     const out: IntegrationStatus[] = SOURCES.map((s) => {
       const tok = tokenBySource.get(s.source)
-      const sync = syncBySource.get(s.source)
+      const sync = syncBySource.get(s.syncStateKey ?? s.source)
       const configured = s.envKeys.every((k) => Boolean(process.env[k]))
       return {
         source: s.source,

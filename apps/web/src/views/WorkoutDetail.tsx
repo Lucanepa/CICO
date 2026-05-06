@@ -42,17 +42,17 @@ export function WorkoutDetail() {
 
   if (error)
     return (
-      <main className="mx-auto max-w-md px-5 pt-10 text-sm text-destructive">Error: {error}</main>
+      <main className="mx-auto max-w-md md:max-w-2xl lg:max-w-4xl px-5 pt-10 text-sm text-destructive">Error: {error}</main>
     )
   if (!data)
     return (
-      <main className="mx-auto max-w-md px-5 pt-10 text-sm text-muted-foreground">Loading…</main>
+      <main className="mx-auto max-w-md md:max-w-2xl lg:max-w-4xl px-5 pt-10 text-sm text-muted-foreground">Loading…</main>
     )
 
   const { workout: w, samples, duplicates, maxHr } = data
 
   return (
-    <main className="mx-auto max-w-md space-y-4 px-5 pb-28 pt-6">
+    <main className="mx-auto max-w-md md:max-w-2xl lg:max-w-4xl space-y-4 px-5 pb-28 pt-6">
       <Button
         variant="ghost"
         size="sm"

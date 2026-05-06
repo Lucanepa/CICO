@@ -36,7 +36,7 @@ export function Settings() {
   }
 
   return (
-    <main className="mx-auto max-w-md space-y-4 px-5 pb-28 pt-6">
+    <main className="mx-auto max-w-md md:max-w-2xl lg:max-w-4xl space-y-4 px-5 pb-28 pt-6">
       <header className="flex items-center gap-3">
         <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/15 text-primary">
           <SettingsIcon className="h-5 w-5" />

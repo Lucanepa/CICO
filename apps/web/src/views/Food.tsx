@@ -28,11 +28,11 @@ export function Food() {
 
   if (error)
     return (
-      <main className="mx-auto max-w-md px-5 pt-10 text-sm text-destructive">Error: {error}</main>
+      <main className="mx-auto max-w-md md:max-w-2xl lg:max-w-4xl px-5 pt-10 text-sm text-destructive">Error: {error}</main>
     )
   if (!entries)
     return (
-      <main className="mx-auto max-w-md px-5 pt-10 text-sm text-muted-foreground">Loading…</main>
+      <main className="mx-auto max-w-md md:max-w-2xl lg:max-w-4xl px-5 pt-10 text-sm text-muted-foreground">Loading…</main>
     )
 
   const totals = entries.reduce(
@@ -46,7 +46,7 @@ export function Food() {
   )
 
   return (
-    <main className="mx-auto max-w-md space-y-4 px-5 pb-28 pt-6">
+    <main className="mx-auto max-w-md md:max-w-2xl lg:max-w-4xl space-y-4 px-5 pb-28 pt-6">
       <header className="flex items-center justify-between">
         <div>
           <p className="text-xs uppercase tracking-wide text-muted-foreground">{prettyDate(date)}</p>

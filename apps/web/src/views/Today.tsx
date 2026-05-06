@@ -13,6 +13,27 @@ import { api, localIsoDate, type CicoBreakdown } from '../lib/api'
 
 const fmt = new Intl.NumberFormat('en-US')
 
+function capitalize(s: string): string {
+  return s.length > 0 ? s.charAt(0).toUpperCase() + s.slice(1) : s
+}
+
+function baseSourceLabel(s: string): string {
+  switch (s) {
+    case 'huawei':
+      return 'Huawei'
+    case 'oura':
+      return 'Oura'
+    case 'measured_bmr':
+      return 'Measured BMR'
+    case 'estimated_7d':
+      return 'Estimated (7-day avg)'
+    case 'none':
+      return 'No data'
+    default:
+      return capitalize(s)
+  }
+}
+
 function shiftIsoDate(iso: string, deltaDays: number): string {
   const d = new Date(`${iso}T00:00:00`)
   d.setDate(d.getDate() + deltaDays)
@@ -62,13 +83,13 @@ export function Today() {
 
   if (loading)
     return (
-      <main className="mx-auto max-w-md px-5 pt-10 text-sm text-muted-foreground">
+      <main className="mx-auto max-w-md md:max-w-2xl lg:max-w-4xl px-5 pt-10 text-sm text-muted-foreground">
         Loading…
       </main>
     )
   if (error)
     return (
-      <main className="mx-auto max-w-md px-5 pt-10 text-sm text-destructive">
+      <main className="mx-auto max-w-md md:max-w-2xl lg:max-w-4xl px-5 pt-10 text-sm text-destructive">
         Error: {error}
       </main>
     )
@@ -84,7 +105,7 @@ export function Today() {
         : 'text-primary'
 
   return (
-    <main className="mx-auto max-w-md space-y-5 px-5 pb-28 pt-6">
+    <main className="mx-auto max-w-md md:max-w-2xl lg:max-w-4xl space-y-5 px-5 pb-28 pt-6">
       <header className="flex items-center justify-between">
         <div>
           <p className="text-xs uppercase tracking-wide text-muted-foreground">
@@ -161,16 +182,19 @@ export function Today() {
           Burn breakdown
         </h2>
         <Card className="flex flex-col gap-2 p-4">
-          <Row label={`Base — ${breakdown.baseSource}`} value={breakdown.baseTotal} />
+          <Row
+            label={`Base — ${baseSourceLabel(breakdown.baseSource)}`}
+            value={breakdown.baseTotal}
+          />
           {breakdown.baseSourceWorkoutsSubtracted > 0 && (
             <Row
-              label="− base workouts"
+              label="− Base workouts"
               value={-breakdown.baseSourceWorkoutsSubtracted}
               tone="muted"
             />
           )}
           {breakdown.primaryWorkoutsAdded > 0 && (
-            <Row label="+ primary workouts" value={breakdown.primaryWorkoutsAdded} />
+            <Row label="+ Primary workouts" value={breakdown.primaryWorkoutsAdded} />
           )}
           {breakdown.watchOffWorkoutsAdded > 0 && (
             <Row

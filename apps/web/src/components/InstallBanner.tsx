@@ -31,7 +31,7 @@ export function InstallBanner() {
   if (window.matchMedia('(display-mode: standalone)').matches) return null
 
   return (
-    <div className="fixed inset-x-3 bottom-[70px] z-20 mx-auto flex max-w-md items-center gap-3 rounded-xl border border-border bg-card/95 p-3 backdrop-blur shadow-lg">
+    <div className="fixed inset-x-3 bottom-[70px] z-20 mx-auto flex max-w-md md:max-w-2xl lg:max-w-4xl items-center gap-3 rounded-xl border border-border bg-card/95 p-3 backdrop-blur shadow-lg">
       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary">
         <Download className="h-4 w-4" />
       </div>

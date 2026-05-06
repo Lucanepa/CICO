@@ -31,11 +31,11 @@ export function SyncStatusBar({ refreshTick }: Props) {
   if (visible.length === 0) return null
 
   return (
-    <Card className="flex items-center gap-3 overflow-x-auto p-3 text-xs">
-      <span className="shrink-0 text-[10px] uppercase tracking-wide text-muted-foreground">
+    <Card className="flex flex-col gap-2 p-3 text-xs">
+      <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
         Sources
       </span>
-      <div className="flex items-center gap-3">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         {visible.map((i) => (
           <SourcePill key={i.source} i={i} />
         ))}
@@ -50,16 +50,18 @@ function SourcePill({ i }: { i: Integration }) {
     <span
       title={hint}
       className={cn(
-        'inline-flex items-center gap-1.5 rounded-full px-2 py-0.5',
+        'flex min-w-0 items-center gap-1.5 rounded-full px-2 py-1',
         tone === 'success' && 'bg-primary/10 text-primary',
         tone === 'pending' && 'bg-muted text-muted-foreground',
         tone === 'warn' && 'bg-warning/15 text-warning',
         tone === 'error' && 'bg-destructive/15 text-destructive',
       )}
     >
-      <Icon className={cn('h-3 w-3', tone === 'pending' && 'animate-pulse')} />
-      <span className="capitalize">{i.label}</span>
-      <span className="text-[10px] opacity-70">{relativeAgo(i.lastSyncedAt)}</span>
+      <Icon className={cn('h-3 w-3 shrink-0', tone === 'pending' && 'animate-pulse')} />
+      <span className="truncate font-medium">{i.label}</span>
+      <span className="ml-auto shrink-0 text-[10px] opacity-70">
+        {relativeAgo(i.lastSyncedAt)}
+      </span>
     </span>
   )
 }

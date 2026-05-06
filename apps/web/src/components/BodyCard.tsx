@@ -45,7 +45,7 @@ export function BodyCard() {
         <div className="flex items-center gap-2">
           {m && (
             <Badge variant="default">
-              {m.source}
+              {capitalize(m.source)}
               {ago ? ` · ${ago}` : ''}
             </Badge>
           )}
@@ -199,6 +199,10 @@ function Stat({
       )}
     </div>
   )
+}
+
+function capitalize(s: string): string {
+  return s.length > 0 ? s.charAt(0).toUpperCase() + s.slice(1) : s
 }
 
 function humanAgo(d: Date): string {

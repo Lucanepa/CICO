@@ -28,11 +28,11 @@ export function Activity() {
 
   if (error)
     return (
-      <main className="mx-auto max-w-md px-5 pt-10 text-sm text-destructive">Error: {error}</main>
+      <main className="mx-auto max-w-md md:max-w-2xl lg:max-w-4xl px-5 pt-10 text-sm text-destructive">Error: {error}</main>
     )
   if (!workouts)
     return (
-      <main className="mx-auto max-w-md px-5 pt-10 text-sm text-muted-foreground">Loading…</main>
+      <main className="mx-auto max-w-md md:max-w-2xl lg:max-w-4xl px-5 pt-10 text-sm text-muted-foreground">Loading…</main>
     )
 
   const dayZones = sumZones(workouts.filter((w) => w.isPrimary).map((w) => w.zoneMinutesJsonb))
@@ -40,7 +40,7 @@ export function Activity() {
   const duplicates = workouts.filter((w) => !w.isPrimary)
 
   return (
-    <main className="mx-auto max-w-md space-y-4 px-5 pb-28 pt-6">
+    <main className="mx-auto max-w-md md:max-w-2xl lg:max-w-4xl space-y-4 px-5 pb-28 pt-6">
       <header>
         <h1 className="text-3xl font-semibold tracking-tight">Activity</h1>
         <p className="mt-0.5 text-xs uppercase tracking-wide text-muted-foreground">

@@ -38,7 +38,7 @@ export function Trends() {
 
   if (error)
     return (
-      <main className="mx-auto max-w-md px-5 pt-10 text-sm text-destructive">
+      <main className="mx-auto max-w-md md:max-w-2xl lg:max-w-4xl px-5 pt-10 text-sm text-destructive">
         Error: {error}
       </main>
     )
@@ -56,7 +56,7 @@ export function Trends() {
   const avgNet = data ? Math.round(totals.net / data.length) : 0
 
   return (
-    <main className="mx-auto max-w-md space-y-4 px-5 pb-28 pt-6">
+    <main className="mx-auto max-w-md md:max-w-2xl lg:max-w-4xl space-y-4 px-5 pb-28 pt-6">
       <header>
         <h1 className="text-3xl font-semibold tracking-tight">Trends</h1>
         <p className="mt-0.5 text-xs uppercase tracking-wide text-muted-foreground">

@@ -35,6 +35,7 @@ export type CicoInput = {
   foodLog: FoodLogRow[]
   watchOffSignals?: WatchOffSignalLite[]
   measuredBmrKcal?: number | null
+  estimatedTotalKcal?: number | null
 }
 
 export type CicoBreakdown = {
@@ -42,7 +43,7 @@ export type CicoBreakdown = {
   intake: number
   burn: number
   net: number
-  baseSource: 'huawei' | 'oura' | 'measured_bmr' | 'none'
+  baseSource: 'huawei' | 'oura' | 'measured_bmr' | 'estimated_7d' | 'none'
   baseTotal: number
   baseSourceWorkoutsSubtracted: number
   primaryWorkoutsAdded: number
@@ -56,4 +57,5 @@ export type CicoFlag =
   | 'huawei_used'
   | 'oura_fallback'
   | 'measured_bmr_used'
+  | 'estimated_7d_used'
   | 'watch_off_added'

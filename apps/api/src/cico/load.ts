@@ -70,8 +70,43 @@ export async function loadAndComputeDay(
     .limit(1)
   const measuredBmrKcal = bmrRow[0]?.bmrKcal ?? null
 
-  const input: CicoInput = { dailyTotals, workouts, foodLog, watchOffSignals, measuredBmrKcal }
+  // Rolling 7-day median total burn from prior days, used to estimate today's
+  // burn when the wearable hasn't published today's daily_activity yet.
+  const priorCutoff = new Date(date)
+  priorCutoff.setUTCDate(priorCutoff.getUTCDate() - 7)
+  const priorCutoffStr = priorCutoff.toISOString().slice(0, 10)
+  const priorRows = await db
+    .select({ totalCalories: schema.dailyTotals.totalCalories })
+    .from(schema.dailyTotals)
+    .where(
+      and(
+        eq(schema.dailyTotals.userId, userId),
+        gte(schema.dailyTotals.date, priorCutoffStr),
+        lte(schema.dailyTotals.date, date),
+        isNotNull(schema.dailyTotals.totalCalories),
+      ),
+    )
+  const priorTotals = priorRows
+    .map((r) => r.totalCalories)
+    .filter((v): v is number => v != null)
+  const estimatedTotalKcal = median(priorTotals)
+
+  const input: CicoInput = {
+    dailyTotals,
+    workouts,
+    foodLog,
+    watchOffSignals,
+    measuredBmrKcal,
+    estimatedTotalKcal,
+  }
   return computeDailyBalance(date, input)
+}
+
+function median(xs: number[]): number | null {
+  if (xs.length === 0) return null
+  const sorted = [...xs].sort((a, b) => a - b)
+  const mid = Math.floor(sorted.length / 2)
+  return sorted.length % 2 === 1 ? sorted[mid]! : Math.round((sorted[mid - 1]! + sorted[mid]!) / 2)
 }
 
 export async function loadIntake(db: Database, userId: string, date: string): Promise<number> {
