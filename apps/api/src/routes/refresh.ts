@@ -63,17 +63,13 @@ export function refreshRoute(env: Env) {
       sources.strava = { status: 'not_configured' }
     }
 
-    if (
-      env.GOOGLE_CLIENT_ID &&
-      env.GOOGLE_CLIENT_SECRET &&
-      env.GOOGLE_DRIVE_FOLDER_ID
-    ) {
+    if (env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET) {
       try {
         sources.huawei = await syncHealthSync(
           database,
           { clientId: env.GOOGLE_CLIENT_ID, clientSecret: env.GOOGLE_CLIENT_SECRET },
           userId,
-          env.GOOGLE_DRIVE_FOLDER_ID,
+          env.GOOGLE_DRIVE_FOLDER_ID ?? '',
         )
       } catch (err) {
         if (err instanceof GoogleNotConnectedError) {

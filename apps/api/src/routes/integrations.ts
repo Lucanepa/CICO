@@ -34,7 +34,8 @@ const SOURCES = [
     source: 'google' as const,
     label: 'Google Drive',
     description: 'Health Sync CSVs (Huawei + Omron).',
-    envKeys: ['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'GOOGLE_DRIVE_FOLDER_ID'],
+    // FOLDER_ID is optional now: empty means "scan whole Drive by filename pattern".
+    envKeys: ['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET'],
   },
   {
     source: 'withings' as const,

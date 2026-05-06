@@ -52,6 +52,11 @@ async function driveFetch(
   return res
 }
 
+// Health Sync (Android) writes CSVs to Drive root with predictable names
+// like "Steps 2026.05.05 Health Connect.csv" or "Weight 2026.05.05 Health
+// Sync.csv". Match those + Omron exports, regardless of folder.
+const HEALTHSYNC_NAME_PATTERN = /(Health Connect|Health Sync|OMRON|Omron)/i
+
 export async function* listFolderFiles(
   db: Database,
   opts: GoogleOpts,
@@ -59,11 +64,15 @@ export async function* listFolderFiles(
   modifiedAfter?: Date,
 ): AsyncGenerator<DriveFile> {
   let pageToken: string | undefined
-  const qParts = [
-    `'${folderId}' in parents`,
-    'trashed = false',
-    "mimeType = 'text/csv'",
-  ]
+  const qParts = ['trashed = false', "mimeType = 'text/csv'"]
+  if (folderId) {
+    // Specific folder: trust everything in it (user opted in by placing files there).
+    qParts.unshift(`'${folderId}' in parents`)
+  } else {
+    // No folder configured: scan whole Drive but server-side filter to
+    // health-related filenames so we never read unrelated CSVs.
+    qParts.push("(name contains 'Health Connect' or name contains 'Health Sync' or name contains 'OMRON' or name contains 'Omron')")
+  }
   if (modifiedAfter) qParts.push(`modifiedTime > '${modifiedAfter.toISOString()}'`)
   const q = qParts.join(' and ')
 
@@ -77,7 +86,11 @@ export async function* listFolderFiles(
 
     const res = await driveFetch(db, opts, url.toString())
     const json = (await res.json()) as { nextPageToken?: string; files: DriveFile[] }
-    for (const f of json.files) yield f
+    for (const f of json.files) {
+      // Defensive client-side filter when scanning whole Drive.
+      if (!folderId && !HEALTHSYNC_NAME_PATTERN.test(f.name)) continue
+      yield f
+    }
     pageToken = json.nextPageToken
   } while (pageToken)
 }
