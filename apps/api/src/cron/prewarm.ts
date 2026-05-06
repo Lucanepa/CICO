@@ -9,6 +9,8 @@ import { syncOura } from '../sync/oura/index.js'
 import { StravaNotConnectedError } from '../sync/strava/client.js'
 import { syncStrava } from '../sync/strava/index.js'
 import { GoogleNotConnectedError, syncHealthSync } from '../sync/healthsync/index.js'
+import { WithingsNotConnectedError } from '../sync/withings/client.js'
+import { syncWithings } from '../sync/withings/index.js'
 
 export function startCron(env: Env) {
   const schedule = env.CRON_PREWARM_SCHEDULE
@@ -51,21 +53,30 @@ export function startCron(env: Env) {
           }
         }
 
-        if (
-          env.GOOGLE_CLIENT_ID &&
-          env.GOOGLE_CLIENT_SECRET &&
-          env.GOOGLE_DRIVE_FOLDER_ID
-        ) {
+        if (env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET) {
           try {
             const result = await syncHealthSync(
               database,
               { clientId: env.GOOGLE_CLIENT_ID, clientSecret: env.GOOGLE_CLIENT_SECRET },
               userId,
-              env.GOOGLE_DRIVE_FOLDER_ID,
+              env.GOOGLE_DRIVE_FOLDER_ID ?? '',
             )
             console.log('[cron] huawei', result)
           } catch (err) {
             if (!(err instanceof GoogleNotConnectedError)) throw err
+          }
+        }
+
+        if (env.WITHINGS_CLIENT_ID && env.WITHINGS_CLIENT_SECRET) {
+          try {
+            const result = await syncWithings(
+              database,
+              { clientId: env.WITHINGS_CLIENT_ID, clientSecret: env.WITHINGS_CLIENT_SECRET },
+              userId,
+            )
+            console.log('[cron] withings', result)
+          } catch (err) {
+            if (!(err instanceof WithingsNotConnectedError)) throw err
           }
         }
       } catch (err) {

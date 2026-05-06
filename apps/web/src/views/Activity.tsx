@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
+import { DateNav, prettyDate, relativeDateLabel } from '../components/DateNav'
 import { SourceBadge } from '../components/SourceBadge'
 import { ZoneBar } from '../components/ZoneBar'
 import { api, localIsoDate, type Workout, type ZoneMinutes } from '../lib/api'
@@ -10,7 +11,7 @@ import { api, localIsoDate, type Workout, type ZoneMinutes } from '../lib/api'
 const fmt = new Intl.NumberFormat('en-US')
 
 export function Activity() {
-  const [date] = useState(() => localIsoDate())
+  const [date, setDate] = useState(() => localIsoDate())
   const [workouts, setWorkouts] = useState<Workout[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const navigate = useNavigate()
@@ -41,11 +42,16 @@ export function Activity() {
 
   return (
     <main className="mx-auto max-w-md md:max-w-2xl lg:max-w-4xl space-y-4 px-5 pb-28 pt-6">
-      <header>
-        <h1 className="text-3xl font-semibold tracking-tight">Activity</h1>
-        <p className="mt-0.5 text-xs uppercase tracking-wide text-muted-foreground">
-          {prettyDate(date)}
-        </p>
+      <header className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-xs uppercase tracking-wide text-muted-foreground">
+            {prettyDate(date)}
+          </p>
+          <h1 className="mt-0.5 text-3xl font-semibold tracking-tight">
+            {relativeDateLabel(date) === 'Today' ? 'Activity' : relativeDateLabel(date)}
+          </h1>
+        </div>
+        <DateNav date={date} onChange={setDate} />
       </header>
 
       <Card className="flex flex-col gap-3 p-4">
@@ -169,11 +175,3 @@ function timeRange(startIso: string, endIso: string): string {
   return `${f.format(start)} – ${f.format(end)}`
 }
 
-function prettyDate(iso: string): string {
-  const d = new Date(`${iso}T00:00:00`)
-  return new Intl.DateTimeFormat(undefined, {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'short',
-  }).format(d)
-}

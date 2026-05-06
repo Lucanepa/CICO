@@ -3,12 +3,13 @@ import { Plus, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { AddFoodSheet } from '../components/AddFoodSheet'
+import { DateNav, prettyDate, relativeDateLabel } from '../components/DateNav'
 import { api, localIsoDate, type FoodLogEntry } from '../lib/api'
 
 const fmt = new Intl.NumberFormat('en-US')
 
 export function Food() {
-  const [date] = useState(() => localIsoDate())
+  const [date, setDate] = useState(() => localIsoDate())
   const [entries, setEntries] = useState<FoodLogEntry[] | null>(null)
   const [adding, setAdding] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -47,20 +48,25 @@ export function Food() {
 
   return (
     <main className="mx-auto max-w-md md:max-w-2xl lg:max-w-4xl space-y-4 px-5 pb-28 pt-6">
-      <header className="flex items-center justify-between">
+      <header className="flex items-start justify-between gap-3">
         <div>
           <p className="text-xs uppercase tracking-wide text-muted-foreground">{prettyDate(date)}</p>
-          <h1 className="mt-0.5 text-3xl font-semibold tracking-tight">Food</h1>
+          <h1 className="mt-0.5 text-3xl font-semibold tracking-tight">
+            {relativeDateLabel(date) === 'Today' ? 'Food' : relativeDateLabel(date)}
+          </h1>
         </div>
-        <Button onClick={() => setAdding(true)} size="sm" className="gap-1.5">
-          <Plus className="h-4 w-4" />
-          Add
-        </Button>
+        <div className="flex items-center gap-1.5">
+          <DateNav date={date} onChange={setDate} />
+          <Button onClick={() => setAdding(true)} size="sm" className="gap-1.5">
+            <Plus className="h-4 w-4" />
+            Add
+          </Button>
+        </div>
       </header>
 
       <Card className="flex flex-col gap-1 p-4">
         <span className="text-xs uppercase tracking-wide text-muted-foreground">
-          Today's intake
+          Intake
         </span>
         <span className="text-2xl font-bold leading-none">{fmt.format(totals.kcal)} kcal</span>
         <span className="text-xs text-muted-foreground">
@@ -128,11 +134,3 @@ function Row({ entry, onDelete }: { entry: FoodLogEntry; onDelete: () => Promise
   )
 }
 
-function prettyDate(iso: string): string {
-  const d = new Date(`${iso}T00:00:00`)
-  return new Intl.DateTimeFormat(undefined, {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'short',
-  }).format(d)
-}
